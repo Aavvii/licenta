@@ -1,0 +1,1 @@
+Implementarea pentru Wasm in coq. In wasm.v sunt implementarile functiilor si regulile de inferenta. In WasmExampleesting.v sunt exemple de programe si demonstratiile lor.
