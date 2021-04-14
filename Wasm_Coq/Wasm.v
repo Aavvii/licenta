@@ -81,19 +81,33 @@ let variable_stack := get_variable_stack stacks in
 
 Inductive exp : Type :=
 | i32_const (n : Z)
-(*| i64_const (n : WasmType)*)
+| i64_const (n : Z)
 | local_get (n : string )
 | local_set (n : string )
 | i32_add
 | i64_add
+| i32_mul
+| i64_mul
+| i32_div_s
+| i64_div_s
+| i32_rem_s
+| i64_rem_s
 | i32_eq
-| i64_eq.
+| i64_eq
+| i32_ge_s
+| i64_ge_s.
 
-(* CONST *)
+(* i32 CONST *)
 Definition execute_i32_const (n : Z) (stacks : Stacks) : Stacks :=
 let execution_stack := get_execution_stack stacks in
 let variable_stack := get_variable_stack stacks in
 ( (i32 n) :: execution_stack, variable_stack ).
+
+(* i64 CONST *)
+Definition execute_i64_const (n : Z) (stacks : Stacks) : Stacks :=
+let execution_stack := get_execution_stack stacks in
+let variable_stack := get_variable_stack stacks in
+( (i64 n) :: execution_stack, variable_stack ).
 
 (* LOCAL.GET *)
 Fixpoint execute_local_get' (variable : string)
@@ -137,7 +151,6 @@ match execution_stack with
 | stack => stack
 end.
 Close Scope Z.
-
 Definition execute_i32_add (stacks : Stacks) : Stacks :=
 let execution_stack := get_execution_stack stacks in
 let variable_stack := get_variable_stack stacks in
@@ -151,11 +164,88 @@ match execution_stack with
 | stack => stack
 end.
 Close Scope Z.
-
 Definition execute_i64_add (stacks : Stacks) : Stacks :=
 let execution_stack := get_execution_stack stacks in
 let variable_stack := get_variable_stack stacks in
 (execute_i64_add' execution_stack, variable_stack ).
+
+(* i32 MUL *)
+Open Scope Z.
+Definition execute_i32_mul' (execution_stack : ExecutionStack) : ExecutionStack :=
+match execution_stack with
+| i32 hd1 :: i32 hd2 :: tl => i32 (hd1 * hd2) :: tl
+| stack => stack
+end.
+Close Scope Z.
+Definition execute_i32_mul (stacks : Stacks) : Stacks :=
+let execution_stack := get_execution_stack stacks in
+let variable_stack := get_variable_stack stacks in
+(execute_i32_mul' execution_stack, variable_stack ).
+
+(* i64 MUL *)
+Open Scope Z.
+Definition execute_i64_mul' (execution_stack : ExecutionStack) : ExecutionStack :=
+match execution_stack with
+| i64 hd1 :: i64 hd2 :: tl => i64 (hd1 * hd2) :: tl
+| stack => stack
+end.
+Close Scope Z.
+Definition execute_i64_mul (stacks : Stacks) : Stacks :=
+let execution_stack := get_execution_stack stacks in
+let variable_stack := get_variable_stack stacks in
+(execute_i64_mul' execution_stack, variable_stack ).
+
+(* i32 DIV_S *)
+Open Scope Z.
+Definition execute_i32_div_s' (execution_stack : ExecutionStack) : ExecutionStack :=
+match execution_stack with
+| i32 hd1 :: i32 hd2 :: tl => i32 (Z.div hd2 hd1) :: tl
+| stack => stack
+end.
+Close Scope Z.
+Definition execute_i32_div_s (stacks : Stacks) : Stacks :=
+let execution_stack := get_execution_stack stacks in
+let variable_stack := get_variable_stack stacks in
+(execute_i32_div_s' execution_stack, variable_stack ).
+
+(* i64 DIV_S *)
+Open Scope Z.
+Definition execute_i64_div_s' (execution_stack : ExecutionStack) : ExecutionStack :=
+match execution_stack with
+| i64 hd1 :: i64 hd2 :: tl => i64 (Z.div hd2 hd1) :: tl
+| stack => stack
+end.
+Close Scope Z.
+Definition execute_i64_div_s (stacks : Stacks) : Stacks :=
+let execution_stack := get_execution_stack stacks in
+let variable_stack := get_variable_stack stacks in
+(execute_i64_div_s' execution_stack, variable_stack ).
+
+(* i32 REM_S *)
+Open Scope Z.
+Definition execute_i32_rem_s' (execution_stack : ExecutionStack) : ExecutionStack :=
+match execution_stack with
+| i32 hd1 :: i32 hd2 :: tl => i32 (Z.modulo hd2 hd1) :: tl
+| stack => stack
+end.
+Close Scope Z.
+Definition execute_i32_rem_s (stacks : Stacks) : Stacks :=
+let execution_stack := get_execution_stack stacks in
+let variable_stack := get_variable_stack stacks in
+(execute_i32_rem_s' execution_stack, variable_stack ).
+
+(* i32 REM_S *)
+Open Scope Z.
+Definition execute_i64_rem_s' (execution_stack : ExecutionStack) : ExecutionStack :=
+match execution_stack with
+| i64 hd1 :: i64 hd2 :: tl => i64 (Z.modulo hd2 hd1) :: tl
+| stack => stack
+end.
+Close Scope Z.
+Definition execute_i64_rem_s (stacks : Stacks) : Stacks :=
+let execution_stack := get_execution_stack stacks in
+let variable_stack := get_variable_stack stacks in
+(execute_i64_rem_s' execution_stack, variable_stack ).
 
 (* i32 EQ *)
 Open Scope Z.
@@ -165,7 +255,6 @@ match execution_stack with
 | stack => stack
 end.
 Close Scope Z.
-
 Definition execute_i32_eq (stacks : Stacks) : Stacks :=
 let execution_stack := get_execution_stack stacks in
 let variable_stack := get_variable_stack stacks in
@@ -179,24 +268,57 @@ match execution_stack with
 | stack => stack
 end.
 Close Scope Z.
-
 Definition execute_i64_eq (stacks : Stacks) : Stacks :=
 let execution_stack := get_execution_stack stacks in
 let variable_stack := get_variable_stack stacks in
 (execute_i64_eq' execution_stack, variable_stack ).
+
+(* i32 GE_S *)
+Open Scope Z.
+Definition execute_i32_ge_s' (execution_stack : ExecutionStack) : ExecutionStack :=
+match execution_stack with
+| i32 hd1 :: i32 hd2 :: tl => i32 (if hd2 >=? hd1 then 1 else 0) :: tl
+| stack => stack
+end.
+Close Scope Z.
+Definition execute_i32_ge_s (stacks : Stacks) : Stacks :=
+let execution_stack := get_execution_stack stacks in
+let variable_stack := get_variable_stack stacks in
+(execute_i32_ge_s' execution_stack, variable_stack ).
+
+(* i64 GE_S *)
+Open Scope Z.
+Definition execute_i64_ge_s' (execution_stack : ExecutionStack) : ExecutionStack :=
+match execution_stack with
+| i64 hd1 :: i64 hd2 :: tl => i32 (if hd2 >=? hd1 then 1 else 0) :: tl
+| stack => stack
+end.
+Close Scope Z.
+Definition execute_i64_ge_s (stacks : Stacks) : Stacks :=
+let execution_stack := get_execution_stack stacks in
+let variable_stack := get_variable_stack stacks in
+(execute_i64_ge_s' execution_stack, variable_stack ).
 
 Definition execute_intruction (instrunction : exp)
                             (stacks : Stacks)
                             : (Stacks):=
 match instrunction with
 | i32_const n => execute_i32_const n stacks
-(*| i64_const n => execute_i64_const n stacks*)
+| i64_const n => execute_i64_const n stacks
 | local_get n => execute_local_get n stacks
 | local_set n => execute_local_set n stacks
-| i32_add    => execute_i32_add stacks
-| i64_add    => execute_i64_add stacks
+| i32_add     => execute_i32_add stacks
+| i64_add     => execute_i64_add stacks
+| i32_mul     => execute_i32_mul stacks
+| i64_mul     => execute_i64_mul stacks
+| i32_div_s   => execute_i32_div_s stacks
+| i64_div_s   => execute_i64_div_s stacks
+| i32_rem_s   => execute_i32_rem_s stacks
+| i64_rem_s   => execute_i64_rem_s stacks
 | i32_eq      => execute_i32_eq stacks
 | i64_eq      => execute_i64_eq stacks
+| i32_ge_s    => execute_i32_ge_s stacks
+| i64_ge_s    => execute_i64_ge_s stacks
 end.
 
 Definition Stacks2Bool' (x : WasmType) : Z :=
@@ -223,22 +345,30 @@ end.
 
 Inductive com : Type :=
   | CSkip
+  | CSeq (c1 c2 : com)
   | CBr_If (label : string)
+  | CIf (c : com)
+  | CLoop (c : com)
   | Ci32_const (x : Z)
+  | Ci64_const (x : Z)
   | Clocal_set (x : string)
   | Clocal_get (x : string)
   | Ci32_add
   | Ci64_add
+  | Ci32_mul
+  | Ci64_mul
+  | Ci32_div_s
+  | Ci64_div_s
+  | Ci32_rem_s
+  | Ci64_rem_s
   | Ci32_eq
   | Ci64_eq
-  | CSeq (c1 c2 : com)
-  | CIf (c : com)
-  | CLoop (c : com).
+  | Ci32_ge_s
+  | Ci64_ge_s.
 
 Inductive result : Type :=
   | SContinue
-  | SBreak
-  | SLoop.
+  | SBr.
 
 Declare Custom Entry com.
 Declare Scope com_scope.
@@ -279,35 +409,6 @@ Notation "'loop' x 'end'" :=
 Nu ar trebui sa fie greu fiindca le creezi si apoi apelezi functiile care se ocupa cu asta.
 Ai mai facut asta deja un alt .v ;
 Aici trebuie sa fie comenzi. Daca CAss e o comanda, in cazul tau, si add ar trebui sa fie o comanda.*)
-Open Scope Z.
-
-(* Versiune cu com-uri pentru:
-i32_const (i32 5);
-i32_const (i32 6);
-i32_add;
-local_set "a";
-i32_const (i32 7);
-i32_const (i32 4);
-i32_add;
-local_get "a";
-i32_eq
-*)
-Definition var1 : string := "Var1".
-Definition attempt1 : com := <{
- Ci32_const 5 ;
- Ci32_const 6 ;
- Ci32_add ;
- Clocal_set var1 ;
- Ci32_const 7 ;
- Ci32_const 4 ;
- Ci32_add ;
- Clocal_get var1 ;
- Ci32_eq ;
- if
-    Ci32_const 5
- end
-}>.
-Close Scope Z.
 
 (*Locate ";".*)
 
@@ -322,10 +423,10 @@ Inductive ceval : com -> Stacks -> result -> Stacks -> Prop :=
       st =[ c1 ]=> st' / SContinue ->
       st' =[ c2 ]=> st'' / res ->
       st =[ c1 ; c2 ]=> st'' / res
-  | E_SeqLoop1 : forall c1 c2 st st' (*st''*),
-      st =[ c1 ]=> st' / SLoop ->
+  | E_SeqBr : forall c1 c2 st st' (*st''*),
+      st =[ c1 ]=> st' / SBr ->
       (*st' =[ c2 ]=> st'' / res2 ->*)
-      st =[ c1 ; c2 ]=> st' / SLoop
+      st =[ c1 ; c2 ]=> st' / SBr
   (* Am comentat asta fiindca am inclus-o in E_Seq
   | E_SeqLoop2 : forall c1 c2 st st' st'',
       st =[ c1 ]=> st' / SContinue ->
@@ -349,13 +450,13 @@ Inductive ceval : com -> Stacks -> result -> Stacks -> Prop :=
       (*st' =[ CLoop c ]=> st'' / SContinue -> (* st' =[ while c end ]=> st'' *) *)
       st =[ CLoop c ]=> st' / SContinue     (* st  =[ while c end ]=> st'' *)
   | E_Loop : forall st st' st'' c,
-      st =[ c ]=> st' / SLoop ->
+      st =[ c ]=> st' / SBr ->
       st' =[ CLoop c ]=> st'' / SContinue -> (* st' =[ while c end ]=> st'' *)
       st =[ CLoop c ]=> st'' / SContinue     (* st  =[ while c end ]=> st'' *)
   | E_Br_IfTrue : forall st st' label,
       Stacks2Bool st = true ->
       (remove_execution_stack_head st) = st' ->
-      st =[ CBr_If label ]=> st' / SLoop
+      st =[ CBr_If label ]=> st' / SBr
   | E_Br_IfFalse : forall st st' label,
       Stacks2Bool st = false ->
       (remove_execution_stack_head st) = st' ->
@@ -367,20 +468,55 @@ Inductive ceval : com -> Stacks -> result -> Stacks -> Prop :=
       st =[ Clocal_get variable ]=> (execute_intruction (local_get variable) st ) / SContinue
   | E_i32_const : forall st variable,
       st =[ Ci32_const variable ]=> (execute_intruction (i32_const variable) st ) / SContinue
+  | E_i64_const : forall st variable,
+      st =[ Ci64_const variable ]=> (execute_intruction (i64_const variable) st ) / SContinue  
   | E_i32_add : forall st,
       (* aici as putea sa pun conditia ca tipurile de date sa fie ambele i32 *)
       st =[ Ci32_add ]=> (execute_intruction (i32_add) st ) / SContinue
   | E_i64_add : forall st,
       (* aici as putea sa pun conditia ca tipurile de date sa fie ambele i64 *)
       st =[ Ci64_add ]=> (execute_intruction (i64_add) st ) / SContinue
+  | E_i32_mul : forall st,
+      (* aici as putea sa pun conditia ca tipurile de date sa fie ambele i32 *)
+      st =[ Ci32_mul ]=> (execute_intruction (i32_mul) st ) / SContinue
+  | E_i64_mul : forall st,
+      (* aici as putea sa pun conditia ca tipurile de date sa fie ambele i64 *)
+      st =[ Ci64_mul ]=> (execute_intruction (i64_mul) st ) / SContinue
+  | E_i32_div_s : forall st,
+      (* aici as putea sa pun conditia ca tipurile de date sa fie ambele i32 *)
+      st =[ Ci32_div_s ]=> (execute_intruction (i32_div_s) st ) / SContinue
+  | E_i64_div_s : forall st,
+      (* aici as putea sa pun conditia ca tipurile de date sa fie ambele i64 *)
+      st =[ Ci64_div_s ]=> (execute_intruction (i64_div_s) st ) / SContinue
+  | E_i32_rem_s : forall st,
+      (* aici as putea sa pun conditia ca tipurile de date sa fie ambele i32 *)
+      st =[ Ci32_rem_s ]=> (execute_intruction (i32_rem_s) st ) / SContinue
+  | E_i64_rem_s : forall st,
+      (* aici as putea sa pun conditia ca tipurile de date sa fie ambele i64 *)
+      st =[ Ci64_rem_s ]=> (execute_intruction (i64_rem_s) st ) / SContinue
   | E_i32_eq : forall st,
       (* aici as putea sa pun conditia ca tipurile de date sa fie ambele i32 *)
       st =[ Ci32_eq ]=> (execute_intruction (i32_eq) st ) / SContinue
   | E_i64_eq : forall st,
       (* aici as putea sa pun conditia ca tipurile de date sa fie ambele i64 *)
       st =[ Ci64_eq ]=> (execute_intruction (i64_eq) st ) / SContinue
+  | E_i32_ge_s : forall st,
+      (* aici as putea sa pun conditia ca tipurile de date sa fie ambele i32 *)
+      st =[ Ci32_ge_s ]=> (execute_intruction (i32_ge_s) st ) / SContinue
+  | E_i64_ge_s : forall st,
+      (* aici as putea sa pun conditia ca tipurile de date sa fie ambele i32 *)
+      st =[ Ci64_ge_s ]=> (execute_intruction (i64_ge_s) st ) / SContinue
 where "st =[ c ]=> st' / s " := (ceval c st s st').
 
 (* ----------- Functioneaza const, add, get, set, if, while, br. If NU are else -------- *)
 
 (* ----------- Urmeaza implementarea si testarea a noi instructiuni -------------------- *)
+
+Definition var1 : string := "Var1".
+Definition var_a : string := "a".
+Definition var_b : string := "b".
+Open Scope Z.
+
+(* test here *)
+
+Close Scope Z.
