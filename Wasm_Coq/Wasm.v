@@ -871,8 +871,7 @@ match contents with
 | _ => CSkip
 end.
 Definition get_function_body (name : string) (state : State) : com :=
-let func_list := get_func_list state in
-let func_content := get_function_by_name' name func_list in
+let func_content := get_function_by_name name state in
 get_function_body' func_content.
 
 Definition get_param_types (func : com) : (list string) :=
@@ -915,7 +914,7 @@ Close Scope string_scope.
 
 Open Scope string_scope.
 Definition list_of_nat_string : list string :=
-["1"; "2"; "3"; "4"; "5"; "6"; "7"; "8"; "9"; "10"; "11"; "12"; "13"; "14"; "15"; "16"; "17"; "18"; "19"; "20"].
+["0"; "1"; "2"; "3"; "4"; "5"; "6"; "7"; "8"; "9"; "10"; "11"; "12"; "13"; "14"; "15"; "16"; "17"; "18"; "19"; "20"; "21"; "22"; "23"; "24"; "25"; "26"; "27"; "28"; "29"; "30"; "31"; "32"; "33"; "34"; "35"; "36"; "37"; "38"; "39"; "40"; "41"; "42"; "43"; "44"; "45"; "46"; "47"; "48"; "49"; "50"; "51"; "52"; "53"; "54"; "55"; "56"; "57"; "58"; "59"; "60"; "61"; "62"; "63"; "64"; "65"; "66"; "67"; "68"; "69"; "70"; "71"; "72"; "73"; "74"; "75"; "76"; "77"; "78"; "79"; "80"; "81"; "82"; "83"; "84"; "85"; "86"; "87"; "88"; "89"; "90"; "91"; "92"; "93"; "94"; "95"; "96"; "97"; "98"; "99"].
 Fixpoint get_nth' (l: list string) (index : nat) (goal : nat) : string :=
 match l with
 | hd::tl => if (index =? goal)%nat then hd else get_nth' tl (index+1) goal
@@ -941,21 +940,27 @@ match nr with
 end.
 
 Definition set_function_params (name : string) (state : State) : State :=
+(* get the 5 components of state*)
 let exec_stack := get_execution_stack state in
 let loc_list := get_local_var_list state in
 let glob_list := get_global_var_list state in
 let func_list := get_func_list state in
 let memory_list := get_memory state in
-let func_content := get_function_by_name' name func_list in
+(* get the function declaration *)
+let func_content := get_function_by_name name state in
+(* get the expected parameter types *)
 let param_types := get_param_types func_content in
+(* get the parameters from stack *)
 let stack_parameters := get_parameters_from_stack (exec_stack) (param_types) in
-if check_types stack_parameters param_types then state else
-  let newvars := generate_locals stack_parameters in
+(* check parameters fit *)
+if (check_types stack_parameters param_types) then
+(* generate result state *)
   (remove_params_from_stack exec_stack (get_nr_of_params param_types),
   ((generate_locals stack_parameters loc_list)),
   glob_list,
   func_list,
-  memory_list).
+  memory_list)
+else state.
 
 Definition execute_intruction (instrunction : exp)
                             (state : State)
@@ -1004,7 +1009,7 @@ Definition State2Bool (state : State)
                             : (bool) :=
 let exec_stack := get_execution_stack state in
 let stack_head_Z_val := State2Bool' (get_execution_stack_head exec_stack) in
-(if (stack_head_Z_val =? ( Z.of_N 0)) then false else true).
+(if (stack_head_Z_val =? (0%Z)) then false else true).
 Close Scope Z.
 
 Fixpoint execute_instructions (intructions : list exp)
@@ -1181,8 +1186,8 @@ Inductive ceval : com -> State -> Branch -> State -> Prop :=
       set_function name (CFunc name param ret c) st = st' ->
       st =[ CFunc name param ret c ]=> st' / SContinue
   | E_FuncStart : forall st st' st'' name param ret c ,
-      st =[ c ]=> st' / SContinue ->
-      set_function name (CFunc name param ret c) st' = st'' ->
+      set_function name (CFunc name param ret c) st = st' ->
+      st' =[ c ]=> st'' / SContinue ->
       st =[ CFunc name param ret c ]=> st'' / SContinue
   | E_Return : forall st,
       st =[ CReturn ]=> st / SReturn
@@ -1262,11 +1267,11 @@ Inductive ceval : com -> State -> Branch -> State -> Prop :=
       st' =[ CLoop label1 c ]=> st'' / SContinue -> (* st' =[ while c end ]=> st'' *)
       st =[ CLoop label1 c ]=> st'' / SContinue     (* st  =[ while c end ]=> st'' *)
 
-  | E_Block : forall st st' (*st''*) c label,
+  | E_Block : forall st st' (*st''*) label c,
       (st =[ c ]=> st' / SContinue) \/ (st =[ c ]=> st' / SBr label) ->
       (*st' =[ CLoop c ]=> st'' / SContinue -> (* st' =[ while c end ]=> st'' *) *)
       st =[ CBlock label c ]=> st' / SContinue     (* st  =[ while c end ]=> st'' *)
-  | E_BlockBrOther : forall st st' (*st''*) c label1 label2,
+  | E_BlockBrOther : forall st st' (*st''*) label1 label2 c,
       (st =[ c ]=> st' / SBr label2 ) ->
       label1 <> label2 ->
       (*st' =[ CLoop c ]=> st'' / SContinue -> (* st' =[ while c end ]=> st'' *) *)
@@ -1376,11 +1381,11 @@ Inductive ceval : com -> State -> Branch -> State -> Prop :=
       st =[ Ci64_eq ]=> st' / SContinue
 
   | E_i32_eqz : forall st st',
-      match_types_last_2_on_stack st = true ->
+      match_last_on_stack_with_type st (i32 0) = true ->
       execute_intruction (i32_eqz) st = st' ->
       st =[ Ci32_eqz ]=> st' / SContinue
   | E_i64_eqz : forall st st',
-      match_types_last_2_on_stack st = true ->
+      match_last_on_stack_with_type st (i32 0) = true ->
       execute_intruction (i64_eqz) st = st' ->
       st =[ Ci64_eqz ]=> st' / SContinue
 
