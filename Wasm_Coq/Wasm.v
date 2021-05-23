@@ -530,7 +530,7 @@ match_wasm_types (get_execution_stack_head exec_stack) (get_variable_from_stack 
 Open Scope Z.
 Definition execute_i32_add' (exec_stack : ExecutionStack) : ExecutionStack :=
 match exec_stack with
-| i32 hd1 :: i32 hd2 :: tl => i32 (hd1 + hd2) :: tl
+| i32 hd1 :: i32 hd2 :: tl => i32 (hd2 + hd1) :: tl
 | stack => stack
 end.
 Close Scope Z.
@@ -546,7 +546,7 @@ let memory_list := get_memory state in
 Open Scope Z.
 Definition execute_i64_add' (exec_stack : ExecutionStack) : ExecutionStack :=
 match exec_stack with
-| i64 hd1 :: i64 hd2 :: tl => i64 (hd1 + hd2) :: tl
+| i64 hd1 :: i64 hd2 :: tl => i64 (hd2 + hd1) :: tl
 | stack => stack
 end.
 Close Scope Z.
@@ -562,7 +562,7 @@ let memory_list := get_memory state in
 Open Scope Z.
 Definition execute_i32_sub' (exec_stack : ExecutionStack) : ExecutionStack :=
 match exec_stack with
-| i32 hd1 :: i32 hd2 :: tl => i32 (hd1 - hd2) :: tl
+| i32 hd1 :: i32 hd2 :: tl => i32 (hd2 - hd1) :: tl
 | stack => stack
 end.
 Close Scope Z.
@@ -579,7 +579,7 @@ let memory_list := get_memory state in
 Open Scope Z.
 Definition execute_i64_sub' (exec_stack : ExecutionStack) : ExecutionStack :=
 match exec_stack with
-| i64 hd1 :: i64 hd2 :: tl => i64 (hd1 - hd2) :: tl
+| i64 hd1 :: i64 hd2 :: tl => i64 (hd2 - hd1) :: tl
 | stack => stack
 end.
 Close Scope Z.
@@ -759,7 +759,7 @@ let memory_list := get_memory state in
 Open Scope Z.
 Definition execute_i32_eq' (exec_stack : ExecutionStack) : ExecutionStack :=
 match exec_stack with
-| i32 hd1 :: i32 hd2 :: tl => i32 (if hd1 =? hd2 then 1 else 0) :: tl
+| i32 hd1 :: i32 hd2 :: tl => i32 (if hd2 =? hd1 then 1 else 0) :: tl
 | stack => stack
 end.
 Close Scope Z.
@@ -775,7 +775,7 @@ let memory_list := get_memory state in
 Open Scope Z.
 Definition execute_i64_eq' (exec_stack : ExecutionStack) : ExecutionStack :=
 match exec_stack with
-| i64 hd1 :: i64 hd2 :: tl => i32 (if hd1 =? hd2 then 1 else 0) :: tl
+| i64 hd1 :: i64 hd2 :: tl => i32 (if hd2 =? hd1 then 1 else 0) :: tl
 | stack => stack
 end.
 Close Scope Z.

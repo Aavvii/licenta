@@ -143,7 +143,7 @@ forall (n m_inv m_init : Z) glob_st fun_st (label:string) mem, m_init >= 10 ->
  Ci32_const 1 ;
  Ci32_ge_s ;
  CBr_If label
-]=> ([] , [(IN, i32 n) ;(inv, i32 ((Z.modulo (m_init) 10) + (m_inv * 10)) ); (temp, i32 (m_init / 10))], glob_st, fun_st, mem) / SBr label.
+]=> ([] , [(IN, i32 n) ;(inv, i32 ((m_inv * 10)+(Z.modulo (m_init) 10)) ); (temp, i32 (m_init / 10))], glob_st, fun_st, mem) / SBr label.
 Proof.
 intros n m_inv m_init glob_st fun_st label mem.
 induction m_init.
@@ -160,23 +160,23 @@ induction m_init.
 ------- apply E_i32_const.
 ------- apply E_Seq with ([i32 (Z.modulo (Zpos p) 10); i32 (m_inv * 10)], [(IN, i32 n) ;(inv, i32 m_inv); (temp, i32 (Zpos p))], glob_st, fun_st, mem).
 --------- apply E_i32_rem_s. auto. auto. auto.
---------- apply E_Seq with ([i32 ((Z.modulo (Zpos p) 10) + (m_inv * 10))], [(IN, i32 n) ;(inv, i32 m_inv); (temp, i32 (Zpos p))], glob_st, fun_st, mem).
+--------- apply E_Seq with ([i32 ((m_inv * 10) + (Z.modulo (Zpos p) 10) )], [(IN, i32 n) ;(inv, i32 m_inv); (temp, i32 (Zpos p))], glob_st, fun_st, mem).
 ---------- apply E_i32_add. auto. auto.
----------- apply E_Seq with ([], [(IN, i32 n) ;(inv, i32 ((Z.modulo (Zpos p) 10) + (m_inv * 10))); (temp, i32 (Zpos p))], glob_st, fun_st, mem).
+---------- apply E_Seq with ([], [(IN, i32 n) ;(inv, i32 ((m_inv * 10) + (Z.modulo (Zpos p) 10))); (temp, i32 (Zpos p))], glob_st, fun_st, mem).
 ----------- apply E_local_set. auto. auto.
------------ apply E_Seq with ([i32 (Zpos p)], [(IN, i32 n) ;(inv, i32 ((Z.modulo (Zpos p) 10) + (m_inv * 10))); (temp, i32 (Zpos p))], glob_st, fun_st, mem).
+----------- apply E_Seq with ([i32 (Zpos p)], [(IN, i32 n) ;(inv, i32 ((m_inv * 10) + (Z.modulo (Zpos p) 10))); (temp, i32 (Zpos p))], glob_st, fun_st, mem).
 ------------ apply E_local_get. auto.
------------- apply E_Seq with ([i32 10; i32 (Zpos p)], [(IN, i32 n) ;(inv, i32 ((Z.modulo (Zpos p) 10) + (m_inv * 10))); (temp, i32 (Zpos p))], glob_st, fun_st, mem).
+------------ apply E_Seq with ([i32 10; i32 (Zpos p)], [(IN, i32 n) ;(inv, i32 ((m_inv * 10) + (Z.modulo (Zpos p) 10))); (temp, i32 (Zpos p))], glob_st, fun_st, mem).
 ------------- apply E_i32_const.
-------------- apply E_Seq with ([i32 ((Zpos p) / 10)], [(IN, i32 n) ;(inv, i32 ((Z.modulo (Zpos p) 10) + (m_inv * 10))); (temp, i32 (Zpos p))], glob_st, fun_st, mem).
+------------- apply E_Seq with ([i32 ((Zpos p) / 10)], [(IN, i32 n) ;(inv, i32 ((m_inv * 10) + (Z.modulo (Zpos p) 10))); (temp, i32 (Zpos p))], glob_st, fun_st, mem).
 -------------- apply E_i32_div_s. auto. auto. auto.
--------------- apply E_Seq with  ([], [(IN, i32 n) ;(inv, i32 ((Z.modulo (Zpos p) 10) + (m_inv * 10))); (temp, i32 ((Zpos p) / 10))], glob_st, fun_st, mem).
+-------------- apply E_Seq with  ([], [(IN, i32 n) ;(inv, i32 ((m_inv * 10) + (Z.modulo (Zpos p) 10))); (temp, i32 ((Zpos p) / 10))], glob_st, fun_st, mem).
 --------------- apply E_local_set. auto. auto.
---------------- apply E_Seq with ([i32 ((Zpos p) / 10)], [(IN, i32 n) ;(inv, i32 ((Z.modulo (Zpos p) 10) + (m_inv * 10))); (temp, i32 ((Zpos p) / 10))], glob_st, fun_st, mem).
+--------------- apply E_Seq with ([i32 ((Zpos p) / 10)], [(IN, i32 n) ;(inv, i32 ((m_inv * 10) + (Z.modulo (Zpos p) 10))); (temp, i32 ((Zpos p) / 10))], glob_st, fun_st, mem).
 ---------------- apply E_local_get. auto.
----------------- apply E_Seq with ([i32 1; i32 ((Zpos p) / 10)], [(IN, i32 n) ;(inv, i32 ((Z.modulo (Zpos p) 10) + (m_inv * 10))); (temp, i32 ((Zpos p) / 10))], glob_st, fun_st, mem).
+---------------- apply E_Seq with ([i32 1; i32 ((Zpos p) / 10)], [(IN, i32 n) ;(inv, i32 ((m_inv * 10) + (Z.modulo (Zpos p) 10))); (temp, i32 ((Zpos p) / 10))], glob_st, fun_st, mem).
 ----------------- apply E_i32_const.
------------------ apply E_Seq with ([i32 1], [(IN, i32 n) ;(inv, i32 ((Z.modulo (Zpos p) 10) + (m_inv * 10))); (temp, i32 ((Zpos p) / 10))], glob_st, fun_st, mem).
+----------------- apply E_Seq with ([i32 1], [(IN, i32 n) ;(inv, i32 ((m_inv * 10) + (Z.modulo (Zpos p) 10))); (temp, i32 ((Zpos p) / 10))], glob_st, fun_st, mem).
 ------------------ apply E_i32_ge_s. auto. apply eval_i32_ge_s_true. apply positive_ge_10_implies_p_div_10_ge_1. assumption.
 ------------------ apply E_Br_IfTrue.
 ------------------- reflexivity.
@@ -186,7 +186,7 @@ Qed.
 
 Lemma loop_invariant_lt_10 :
 forall n m_inv m_init m_step glob_st fun_st (label:string) mem,
-m_step = ((Z.modulo (m_init) 10) + (m_inv * 10)) ->
+m_step = ((m_inv * 10) + (Z.modulo (m_init) 10) ) ->
 (*m_init / 10 = 0 ->*)
 m_init < 10 ->
 ([], [(IN, i32 n) ;(inv, i32 m_inv); (temp, i32 m_init)], glob_st, fun_st, mem) =[
@@ -223,30 +223,30 @@ apply E_Seq with ([i32 10; i32 m_init; i32 (m_inv * 10)], [(IN, i32 n) ;(inv, i3
 apply E_i32_const.
 apply E_Seq with ([i32 (Z.modulo m_init 10); i32 (m_inv * 10)], [(IN, i32 n) ;(inv, i32 m_inv); (temp, i32 m_init)], glob_st, fun_st, mem).
 apply E_i32_rem_s. auto. auto. auto.
-apply E_Seq with ([i32 ((Z.modulo m_init 10) + (m_inv * 10))], [(IN, i32 n) ;(inv, i32 m_inv); (temp, i32 m_init)], glob_st, fun_st, mem).
+apply E_Seq with ([i32 ((m_inv * 10) + (Z.modulo m_init 10) )], [(IN, i32 n) ;(inv, i32 m_inv); (temp, i32 m_init)], glob_st, fun_st, mem).
 apply E_i32_add. auto. auto.
-apply E_Seq with ([], [(IN, i32 n) ;(inv, i32 ((Z.modulo m_init 10) + (m_inv * 10))); (temp, i32 m_init)], glob_st, fun_st, mem).
+apply E_Seq with ([], [(IN, i32 n) ;(inv, i32 ((m_inv * 10)+(Z.modulo m_init 10))); (temp, i32 m_init)], glob_st, fun_st, mem).
 apply E_local_set. auto. auto.
-apply E_Seq with ([i32 m_init], [(IN, i32 n) ;(inv, i32 ((Z.modulo m_init 10) + (m_inv * 10))); (temp, i32 m_init)], glob_st, fun_st, mem).
+apply E_Seq with ([i32 m_init], [(IN, i32 n) ;(inv, i32 ((m_inv * 10)+(Z.modulo m_init 10))); (temp, i32 m_init)], glob_st, fun_st, mem).
 apply E_local_get. auto.
-apply E_Seq with ([i32 10; i32 m_init], [(IN, i32 n) ;(inv, i32 ((Z.modulo m_init 10) + (m_inv * 10))); (temp, i32 m_init)], glob_st, fun_st, mem).
+apply E_Seq with ([i32 10; i32 m_init], [(IN, i32 n) ;(inv, i32 ((m_inv * 10)+(Z.modulo m_init 10))); (temp, i32 m_init)], glob_st, fun_st, mem).
 apply E_i32_const.
-apply E_Seq with ([i32 (m_init/10)], [(IN, i32 n) ;(inv, i32 ((Z.modulo m_init 10) + (m_inv * 10))); (temp, i32 m_init)], glob_st, fun_st, mem).
+apply E_Seq with ([i32 (m_init/10)], [(IN, i32 n) ;(inv, i32 ((m_inv * 10)+(Z.modulo m_init 10))); (temp, i32 m_init)], glob_st, fun_st, mem).
 apply E_i32_div_s. auto. auto. auto.
-apply E_Seq with ([], [(IN, i32 n) ;(inv, i32 ((Z.modulo m_init 10) + (m_inv * 10))); (temp, i32 (m_init/10))], glob_st, fun_st, mem).
+apply E_Seq with ([], [(IN, i32 n) ;(inv, i32 ((m_inv * 10)+(Z.modulo m_init 10))); (temp, i32 (m_init/10))], glob_st, fun_st, mem).
 apply E_local_set. auto. auto.
-apply E_Seq with ([i32 (m_init/10)], [(IN, i32 n) ;(inv, i32 ((Z.modulo m_init 10) + (m_inv * 10))); (temp, i32 (m_init/10))], glob_st, fun_st, mem).
+apply E_Seq with ([i32 (m_init/10)], [(IN, i32 n) ;(inv, i32 ((m_inv * 10)+(Z.modulo m_init 10))); (temp, i32 (m_init/10))], glob_st, fun_st, mem).
 apply E_local_get. auto.
-apply E_Seq with ([i32 1; i32 (m_init/10)], [(IN, i32 n) ;(inv, i32 ((Z.modulo m_init 10) + (m_inv * 10))); (temp, i32 (m_init/10))], glob_st, fun_st, mem).
+apply E_Seq with ([i32 1; i32 (m_init/10)], [(IN, i32 n) ;(inv, i32 ((m_inv * 10)+(Z.modulo m_init 10))); (temp, i32 (m_init/10))], glob_st, fun_st, mem).
 apply E_i32_const.
 induction m_init.
-- apply E_Seq with ([i32 0], [(IN, i32 n) ;(inv, i32 (0 + (m_inv * 10))); (temp, i32 (0))], glob_st, fun_st, mem).
+- apply E_Seq with ([i32 0], [(IN, i32 n) ;(inv, i32 ((m_inv * 10) + 0)); (temp, i32 (0))], glob_st, fun_st, mem).
 -- simpl. apply E_i32_ge_s. auto. auto.
--- apply E_Br_IfFalse. auto. simpl. rewrite H0. simpl. auto.
-- apply E_Seq with ([i32 0], [(IN, i32 n); (inv, i32 (Z.pos p mod 10 + m_inv * 10)); (temp, i32 (Z.pos p / 10))], glob_st, fun_st, mem).
+-- apply E_Br_IfFalse. auto. simpl. rewrite H0. simpl.  rewrite Zdiv.Zmod_0_l. auto.
+- apply E_Seq with ([i32 0], [(IN, i32 n); (inv, i32 (m_inv * 10 + Z.pos p mod 10)); (temp, i32 (Z.pos p / 10))], glob_st, fun_st, mem).
 -- apply E_i32_ge_s. auto. apply eval_i32_ge_s_false. apply positive_lt_than_10_implies_p_div_10_lt_1. assumption.
 -- apply E_Br_IfFalse. auto. rewrite Zdiv.Zdiv_small. rewrite H0. simpl. auto. split. apply Pos2Z.is_nonneg. assumption.
-- apply E_Seq with ([i32 0], [(IN, i32 n); (inv, i32 (Z.neg p mod 10 + m_inv * 10)); (temp, i32 (Z.neg p / 10))], glob_st, fun_st, mem).
+- apply E_Seq with ([i32 0], [(IN, i32 n); (inv, i32 (m_inv * 10 + Z.neg p mod 10)); (temp, i32 (Z.neg p / 10))], glob_st, fun_st, mem).
 -- apply E_i32_ge_s. auto. simpl. apply eval_i32_ge_s_false.
 assert (Z.neg p / 10 <= 0). apply negative_lt_than_10_implies_n_div_10_is_0. assumption. apply lt1_equiv_le0. assumption.
 -- apply E_Br_IfFalse. auto. rewrite H0. simpl. auto.
@@ -277,7 +277,8 @@ forall n temp_init inv_init glob_st fun_st label mem,
  Ci32_const 1%Z ;
  Ci32_ge_s ;
  CBr_If label
-]=> ([] , [(IN, i32 n) ;(inv, i32 ((Z.modulo (temp_init) 10) + (inv_init * 10))); (temp, i32 (temp_init / 10))], glob_st, fun_st, mem) / if (temp_init) >=? 10 then SBr label else SContinue.
+]=> ([] , [(IN, i32 n) ;(inv, i32 ((inv_init * 10)+(Z.modulo (temp_init) 10) )); (temp, i32 (temp_init / 10))], glob_st, fun_st, mem) /
+if (temp_init) >=? 10 then SBr label else SContinue.
 Proof.
 intros n temp_init inv_init glob_st fun_st label mem.
 induction temp_init.
@@ -449,7 +450,7 @@ induction n.
 -- apply E_Loop with ([] , [(IN, i32 (Z.pos p)) ;(inv, i32 ((invers (Z.pos p)) / 10)); (temp, i32 (Z.modulo (Z.pos p) 10) )],glob_st, fun_st, mem) label1.
 --- induction p.
 Search (Z -> uint).
-+ rewrite Pos2Z.pos_xI. 
++ rewrite Pos2Z.pos_xI.
 rewrite loop_invariant.
 
  

@@ -194,18 +194,32 @@ if (byte1 =? 0) || (byte2 =? 0) || (byte3 =? 0) || (byte4 =? 0)
 then true else
 false.
 
+Definition are_all_bytes_not_0_bitwise (n : Z) :=
+let op_result :=
+(Z.land
+       (Z.land
+          (Z.lxor (n) (-1))
+          ( (n -16843009 ))) 
+       (-2139062144))
+in
+if op_result =? 0 then true else false.
+
+
 Eval compute in is_any_byte_0 (-2139062144).
 Eval compute in is_any_byte_0 (-2147450752).
 
+Eval compute in are_all_bytes_not_0_bitwise (-2139062144).
+Eval compute in are_all_bytes_not_0_bitwise (-2147450752).
+Eval compute in are_all_bytes_not_0_bitwise (197379).
 
-Lemma check_any_byte_zero :
+(*Lemma check_any_byte_zero :
 (pointer + 4) < memsize ->
 ([],
 (v3, i32 var_3) :: (v2, i32 var_2) :: (v1, i32 pointer) :: (v0, i32 pointer) :: loc_list,
 glob_list,
 func_list1 ++ [(strlen, fun_strlen)] ++ func_list2,
 (memsize, mem1 ++ [(pointer, str_start)] ++ str_middle ++ [(pointer + l, str_end)] ++ mem2))
-=[
+=[*)
 
 
 
@@ -246,15 +260,15 @@ br_if L2
 ]=> ([],
     (v3, i32
 (four_byte_value_notation pointer l str_start str_end mem1 str_middle mem2))
-    :: (v2, i32 (pointer + 4))
-       :: (v1, i32 pointer) :: (v0, i32 pointer) :: loc_list,
+    :: (v2, i32 (pointer))
+       :: (v1, i32 (pointer +4)) :: (v0, i32 pointer) :: loc_list,
     glob_list, func_list1 ++ [(strlen, fun_strlen)] ++ func_list2,
     (memsize,
     mem1 ++
     [(pointer, str_start)] ++
     str_middle ++ [(pointer + l, str_end)] ++ mem2)) /
-if (is_any_byte_0 (four_byte_value_notation pointer l str_start str_end mem1 str_middle mem2))
-then SContinue else SBr L2.
+if (are_all_bytes_not_0_bitwise (four_byte_value_notation pointer l str_start str_end mem1 str_middle mem2))
+then SBr L2 else SContinue.
 Proof.
 intros.
 apply E_Seq with ([i32 pointer], ( (v3, i32 var_3) :: (v2, i32 var_2) :: (v1, i32 pointer) :: (v0, i32 pointer) :: loc_list), glob_list, (func_list1 ++ [(strlen ,fun_strlen)] ++ func_list2), (memsize, (mem1 ++ [(pointer, str_start)] ++ str_middle ++ [(pointer + l, str_end)] ++ mem2)) ).
@@ -263,40 +277,104 @@ apply E_Seq with ([i32 pointer], ( (v3, i32 var_3) :: (v2, i32 var_2) :: (v1, i3
 ** apply E_local_tee. auto. auto.
 ** apply E_Seq with ([i32 4; i32 pointer], ( (v3, i32 var_3) :: (v2, i32 pointer) :: (v1, i32 pointer) :: (v0, i32 pointer) :: loc_list), glob_list, (func_list1 ++ [(strlen ,fun_strlen)] ++ func_list2), (memsize, (mem1 ++ [(pointer, str_start)] ++ str_middle ++ [(pointer + l, str_end)] ++ mem2)) ).
 *** apply E_i32_const.
-*** apply E_Seq with ([i32 (4 + pointer)], ( (v3, i32 var_3) :: (v2, i32 pointer) :: (v1, i32 pointer) :: (v0, i32 pointer) :: loc_list), glob_list, (func_list1 ++ [(strlen ,fun_strlen)] ++ func_list2), (memsize, (mem1 ++ [(pointer, str_start)] ++ str_middle ++ [(pointer + l, str_end)] ++ mem2)) ).
+*** apply E_Seq with ([i32 (pointer+4)], ( (v3, i32 var_3) :: (v2, i32 pointer) :: (v1, i32 pointer) :: (v0, i32 pointer) :: loc_list), glob_list, (func_list1 ++ [(strlen ,fun_strlen)] ++ func_list2), (memsize, (mem1 ++ [(pointer, str_start)] ++ str_middle ++ [(pointer + l, str_end)] ++ mem2)) ).
 **** apply E_i32_add. auto. auto.
-**** apply E_Seq with ([], ( (v3, i32 var_3) :: (v2, i32 pointer) :: (v1, i32 (4+pointer)) :: (v0, i32 pointer) :: loc_list), glob_list, (func_list1 ++ [(strlen ,fun_strlen)] ++ func_list2), (memsize, (mem1 ++ [(pointer, str_start)] ++ str_middle ++ [(pointer + l, str_end)] ++ mem2)) ).
+**** apply E_Seq with ([], ( (v3, i32 var_3) :: (v2, i32 pointer) :: (v1, i32 (pointer+4)) :: (v0, i32 pointer) :: loc_list), glob_list, (func_list1 ++ [(strlen ,fun_strlen)] ++ func_list2), (memsize, (mem1 ++ [(pointer, str_start)] ++ str_middle ++ [(pointer + l, str_end)] ++ mem2)) ).
 ***** apply E_local_set. auto. auto.
-***** apply E_Seq with ([i32 pointer], ( (v3, i32 var_3) :: (v2, i32 pointer) :: (v1, i32 (4+pointer)) :: (v0, i32 pointer) :: loc_list), glob_list, (func_list1 ++ [(strlen ,fun_strlen)] ++ func_list2), (memsize, (mem1 ++ [(pointer, str_start)] ++ str_middle ++ [(pointer + l, str_end)] ++ mem2)) ).
+***** apply E_Seq with ([i32 pointer], ( (v3, i32 var_3) :: (v2, i32 pointer) :: (v1, i32 (pointer+4)) :: (v0, i32 pointer) :: loc_list), glob_list, (func_list1 ++ [(strlen ,fun_strlen)] ++ func_list2), (memsize, (mem1 ++ [(pointer, str_start)] ++ str_middle ++ [(pointer + l, str_end)] ++ mem2)) ).
 ****** apply E_local_get. auto.
 ****** apply E_Seq with ([i32
 (four_byte_value_notation pointer l str_start str_end mem1 str_middle mem2)
-], ( (v3, i32 var_3) :: (v2, i32 pointer) :: (v1, i32 (4+pointer)) :: (v0, i32 pointer) :: loc_list), glob_list, (func_list1 ++ [(strlen ,fun_strlen)] ++ func_list2), (memsize, (mem1 ++ [(pointer, str_start)] ++ str_middle ++ [(pointer + l, str_end)] ++ mem2)) ).
+], ( (v3, i32 var_3) :: (v2, i32 pointer) :: (v1, i32 (pointer+4)) :: (v0, i32 pointer) :: loc_list), glob_list, (func_list1 ++ [(strlen ,fun_strlen)] ++ func_list2), (memsize, (mem1 ++ [(pointer, str_start)] ++ str_middle ++ [(pointer + l, str_end)] ++ mem2)) ).
 ******* apply E_i32_Load.
 ******** unfold execute_intruction. unfold execute_i32_load. simpl.
 unfold "<?". rewrite H. simpl. reflexivity.
 ******** reflexivity.
 ******* apply E_Seq with
 ([i32 (four_byte_value_notation pointer l str_start str_end mem1 str_middle mem2)],
-( (v3, i32 (four_byte_value_notation pointer l str_start str_end mem1 str_middle mem2)) :: (v2, i32 pointer) :: (v1, i32 (4+pointer)) :: (v0, i32 pointer) :: loc_list),
+( (v3, i32 (four_byte_value_notation pointer l str_start str_end mem1 str_middle mem2)) :: (v2, i32 pointer) :: (v1, i32 (pointer+4)) :: (v0, i32 pointer) :: loc_list),
 glob_list, (func_list1 ++ [(strlen ,fun_strlen)] ++ func_list2), (memsize, (mem1 ++ [(pointer, str_start)] ++ str_middle ++ [(pointer + l, str_end)] ++ mem2)) ).
 ******** apply E_local_tee.
 ********* reflexivity.
 ********* reflexivity.
 ******** apply E_Seq with
 ([i32 (-1); i32 (four_byte_value_notation pointer l str_start str_end mem1 str_middle mem2)],
-( (v3, i32 (four_byte_value_notation pointer l str_start str_end mem1 str_middle mem2)) :: (v2, i32 pointer) :: (v1, i32 (4+pointer)) :: (v0, i32 pointer) :: loc_list),
+( (v3, i32 (four_byte_value_notation pointer l str_start str_end mem1 str_middle mem2)) :: (v2, i32 pointer) :: (v1, i32 (pointer+4)) :: (v0, i32 pointer) :: loc_list),
 glob_list, (func_list1 ++ [(strlen ,fun_strlen)] ++ func_list2), (memsize, (mem1 ++ [(pointer, str_start)] ++ str_middle ++ [(pointer + l, str_end)] ++ mem2)) ).
 ********* apply E_i32_const.
 ********* apply E_Seq with
 ([i32 ( Z.lxor (four_byte_value_notation pointer l str_start str_end mem1 str_middle mem2) (-1) )],
-( (v3, i32 (four_byte_value_notation pointer l str_start str_end mem1 str_middle mem2)) :: (v2, i32 pointer) :: (v1, i32 (4+pointer)) :: (v0, i32 pointer) :: loc_list),
+( (v3, i32 (four_byte_value_notation pointer l str_start str_end mem1 str_middle mem2)) :: (v2, i32 pointer) :: (v1, i32 (pointer+4)) :: (v0, i32 pointer) :: loc_list),
 glob_list, (func_list1 ++ [(strlen ,fun_strlen)] ++ func_list2), (memsize, (mem1 ++ [(pointer, str_start)] ++ str_middle ++ [(pointer + l, str_end)] ++ mem2)) ).
 ********** apply E_i32_xor.
 *********** reflexivity.
 *********** reflexivity.
-********** 
-Admitted. 
+********** apply E_Seq with
+([i32 (four_byte_value_notation pointer l str_start str_end mem1 str_middle mem2); i32 ( Z.lxor (four_byte_value_notation pointer l str_start str_end mem1 str_middle mem2) (-1) )],
+( (v3, i32 (four_byte_value_notation pointer l str_start str_end mem1 str_middle mem2)) :: (v2, i32 pointer) :: (v1, i32 (pointer+4)) :: (v0, i32 pointer) :: loc_list),
+glob_list, (func_list1 ++ [(strlen ,fun_strlen)] ++ func_list2), (memsize, (mem1 ++ [(pointer, str_start)] ++ str_middle ++ [(pointer + l, str_end)] ++ mem2)) ).
+*********** apply E_local_get. auto.
+*********** apply E_Seq with
+([i32 16843009; i32 (four_byte_value_notation pointer l str_start str_end mem1 str_middle mem2); i32 ( Z.lxor (four_byte_value_notation pointer l str_start str_end mem1 str_middle mem2) (-1) )],
+( (v3, i32 (four_byte_value_notation pointer l str_start str_end mem1 str_middle mem2)) :: (v2, i32 pointer) :: (v1, i32 (pointer+4)) :: (v0, i32 pointer) :: loc_list),
+glob_list, (func_list1 ++ [(strlen ,fun_strlen)] ++ func_list2), (memsize, (mem1 ++ [(pointer, str_start)] ++ str_middle ++ [(pointer + l, str_end)] ++ mem2)) ).
+************ apply E_i32_const.
+************ apply E_Seq with
+([i32 ((four_byte_value_notation pointer l str_start str_end mem1 str_middle mem2)-16843009); i32 ( Z.lxor (four_byte_value_notation pointer l str_start str_end mem1 str_middle mem2) (-1) )],
+( (v3, i32 (four_byte_value_notation pointer l str_start str_end mem1 str_middle mem2)) :: (v2, i32 pointer) :: (v1, i32 (pointer+4)) :: (v0, i32 pointer) :: loc_list),
+glob_list, (func_list1 ++ [(strlen ,fun_strlen)] ++ func_list2), (memsize, (mem1 ++ [(pointer, str_start)] ++ str_middle ++ [(pointer + l, str_end)] ++ mem2)) ).
+************* apply E_i32_sub. reflexivity. reflexivity.
+************* apply E_Seq with
+([i32 ( Z.land  ( Z.lxor (four_byte_value_notation pointer l str_start str_end mem1 str_middle mem2) (-1))((four_byte_value_notation pointer l str_start str_end mem1 str_middle mem2)-16843009) )],
+( (v3, i32 (four_byte_value_notation pointer l str_start str_end mem1 str_middle mem2)) :: (v2, i32 pointer) :: (v1, i32 (pointer+4)) :: (v0, i32 pointer) :: loc_list),
+glob_list, (func_list1 ++ [(strlen ,fun_strlen)] ++ func_list2), (memsize, (mem1 ++ [(pointer, str_start)] ++ str_middle ++ [(pointer + l, str_end)] ++ mem2)) ).
+************** apply E_i32_and. auto. auto.
+************** apply E_Seq with
+([i32 (-2139062144);i32 ( Z.land  ( Z.lxor (four_byte_value_notation pointer l str_start str_end mem1 str_middle mem2) (-1))((four_byte_value_notation pointer l str_start str_end mem1 str_middle mem2)-16843009) )],
+( (v3, i32 (four_byte_value_notation pointer l str_start str_end mem1 str_middle mem2)) :: (v2, i32 pointer) :: (v1, i32 (pointer+4)) :: (v0, i32 pointer) :: loc_list),
+glob_list, (func_list1 ++ [(strlen ,fun_strlen)] ++ func_list2), (memsize, (mem1 ++ [(pointer, str_start)] ++ str_middle ++ [(pointer + l, str_end)] ++ mem2)) ).
+*************** apply E_i32_const.
+*************** apply E_Seq with
+([i32 (Z.land ( Z.land  ( Z.lxor (four_byte_value_notation pointer l str_start str_end mem1 str_middle mem2) (-1))((four_byte_value_notation pointer l str_start str_end mem1 str_middle mem2)-16843009) ) (-2139062144))],
+( (v3, i32 (four_byte_value_notation pointer l str_start str_end mem1 str_middle mem2)) :: (v2, i32 pointer) :: (v1, i32 (pointer+4)) :: (v0, i32 pointer) :: loc_list),
+glob_list, (func_list1 ++ [(strlen ,fun_strlen)] ++ func_list2), (memsize, (mem1 ++ [(pointer, str_start)] ++ str_middle ++ [(pointer + l, str_end)] ++ mem2)) ).
+**************** apply E_i32_and. auto. auto.
+**************** simpl.
+case_eq(Z.land
+         (Z.land
+            (Z.lxor
+               (four_byte_value_notation pointer l str_start
+                  str_end mem1 str_middle mem2) 
+               (-1))
+            (four_byte_value_notation pointer l str_start str_end
+               mem1 str_middle mem2 - 16843009)) 
+         (-2139062144) =? 0).
++ (*case true*) intros. apply E_Seq with
+([i32 1],
+( (v3, i32 (four_byte_value_notation pointer l str_start str_end mem1 str_middle mem2)) :: (v2, i32 pointer) :: (v1, i32 (pointer+4)) :: (v0, i32 pointer) :: loc_list),
+glob_list, (func_list1 ++ [(strlen ,fun_strlen)] ++ func_list2), (memsize, (mem1 ++ [(pointer, str_start)] ++ str_middle ++ [(pointer + l, str_end)] ++ mem2)) ).
+++ apply E_i32_eqz.
++++ auto.
++++ unfold execute_intruction. unfold execute_i32_eqz.
+unfold execute_i32_eqz'. simpl.
+rewrite H0. reflexivity.
+++ unfold are_all_bytes_not_0_bitwise.
+rewrite H0.
+apply E_Br_IfTrue. reflexivity. reflexivity. 
++ (*case false*) intros. apply E_Seq with
+([i32 0],
+( (v3, i32 (four_byte_value_notation pointer l str_start str_end mem1 str_middle mem2)) :: (v2, i32 pointer) :: (v1, i32 (pointer+4)) :: (v0, i32 pointer) :: loc_list),
+glob_list, (func_list1 ++ [(strlen ,fun_strlen)] ++ func_list2), (memsize, (mem1 ++ [(pointer, str_start)] ++ str_middle ++ [(pointer + l, str_end)] ++ mem2)) ).
+++ apply E_i32_eqz.
++++ auto.
++++ unfold execute_intruction. unfold execute_i32_eqz.
+unfold execute_i32_eqz'. simpl.
+rewrite H0. reflexivity.
+++ unfold are_all_bytes_not_0_bitwise.
+rewrite H0.
+apply E_Br_IfFalse. reflexivity. reflexivity.
+Qed.
+
 
 Lemma strlen_works :
 forall (pointer l str_start str_end : Z)
@@ -355,8 +433,26 @@ rewrite H3. reflexivity.
 +++++++ apply E_IfFalse.
 * reflexivity.
 * reflexivity.
-+++++++ apply E_Seq with ([], ( (v3, i32 0) :: (v2, i32 pointer) :: (v1, i32 pointer) :: (v0, i32 pointer) :: loc_list), glob_list, (func_list1 ++ [(strlen ,fun_strlen)] ++ func_list2), (memsize, (mem1 ++ [(pointer, str_start)] ++ str_middle ++ [(pointer + l, str_end)] ++ mem2)) ).
++++++++ apply E_Seq with ([],
+    (v3, i32
+(four_byte_value_notation pointer l str_start str_end mem1 str_middle mem2))
+    :: (v2, i32 (pointer))
+       :: (v1, i32 (pointer +4)) :: (v0, i32 pointer) :: loc_list,
+    glob_list, func_list1 ++ [(strlen, fun_strlen)] ++ func_list2,
+    (memsize,
+    mem1 ++
+    [(pointer, str_start)] ++
+    str_middle ++ [(pointer + l, str_end)] ++ mem2)).
 ++++++++ apply E_LoopOnce.
+(*case_eq((is_any_byte_not_0_bitwise (four_byte_value_notation pointer l str_start str_end mem1 str_middle mem2))).
+*)
+* intros.
+induction (four_byte_value_notation pointer l str_start str_end mem1
+         str_middle mem2).
+** 
+
+apply strlen_loop2_invariant.
+
 apply E_Seq with ([i32 pointer], ( (v3, i32 0) :: (v2, i32 0) :: (v1, i32 pointer) :: (v0, i32 pointer) :: loc_list), glob_list, (func_list1 ++ [(strlen ,fun_strlen)] ++ func_list2), (memsize, (mem1 ++ [(pointer, str_start)] ++ str_middle ++ [(pointer + l, str_end)] ++ mem2)) ).
 ** apply E_local_get. auto.
 ** apply E_Seq with ([i32 pointer], ( (v3, i32 0) :: (v2, i32 pointer) :: (v1, i32 pointer) :: (v0, i32 pointer) :: loc_list), glob_list, (func_list1 ++ [(strlen ,fun_strlen)] ++ func_list2), (memsize, (mem1 ++ [(pointer, str_start)] ++ str_middle ++ [(pointer + l, str_end)] ++ mem2)) ).
