@@ -8,15 +8,15 @@ Import ListNotations.
 Set Warnings "-notation-overridden,-parsing".
 From Coq Require Import Bool.Bool.
 From Coq Require Import Init.Nat.
-From Coq Require Import Arith.Arith.
+(*From Coq Require Import Arith.Arith.*)
 From Coq Require Import Arith.EqNat.
-From Coq Require Import Lia.
+(*From Coq Require Import Lia.*)
 From Coq Require Import Lists.List.
 From Coq Require Import Strings.String.
 From Coq Require Import ZArith.Znat.
 From Coq Require Import ZArith.BinInt.
-From Coq Require Import ZArith.Zbool.
-From Coq Require Import Reals.RIneq.
+(*From Coq Require Import ZArith.Zbool.*)
+(*From Coq Require Import Reals.RIneq.*)
 Import N2Z.
 Import ListNotations.
 (*Open Scope R_scope.*)
@@ -437,12 +437,12 @@ then
   let loc_list := get_local_var_list state in
   let glob_list := get_global_var_list state in
   let func_list := get_func_list state in
-  let byte1 := (signed2unsigned (load_8_from_adress index memory_list) 1 ) in
-  let byte2 := (signed2unsigned (load_8_from_adress (index+1) memory_list) 1 ) in
-  let byte3 := (signed2unsigned (load_8_from_adress (index+2) memory_list) 1 ) in
-  let byte4 := (signed2unsigned (load_8_from_adress (index+3) memory_list) 1 ) in
+  let byte1 := ((*signed2unsigned*) (load_8_from_adress index memory_list) (*1*) ) in
+  let byte2 := ((*signed2unsigned*) (load_8_from_adress (index+1) memory_list) (*1*) ) in
+  let byte3 := ((*signed2unsigned*) (load_8_from_adress (index+2) memory_list) (*1*) ) in
+  let byte4 := ((*signed2unsigned*) (load_8_from_adress (index+3) memory_list) (*1*) ) in
   let number :=
-    (unsigned2signed (byte1 + (byte2 * 256) + (byte3 * 65536) + (byte4 * 16777216)) 4)
+    (unsigned2signed (byte1 + (Z.shiftl byte2 8) + (Z.shiftl byte3 16) + (Z.shiftl byte4 24)) 4)
   in
   ((i32 (number))::(get_execution_stack_tail exec_stack),
   loc_list,
@@ -1192,10 +1192,10 @@ Inductive ceval : com -> State -> Branch -> State -> Prop :=
   | E_Return : forall st,
       st =[ CReturn ]=> st / SReturn
 
-  | E_Call : forall name st st' st'',
+  | E_Call : forall name st st' st'' res,
       (*get_function_body name st = c ->*) (* L-am pus sa sa singur c-ul*)
       set_function_params name st = st' ->
-      st' =[ get_function_body name st ]=> st'' / SContinue ->
+      st' =[ get_function_body name st ]=> st'' / res ->
       st =[ CCall name ]=> st'' / SContinue
 
   | E_Memory : forall min max st st',
@@ -1232,6 +1232,18 @@ Inductive ceval : com -> State -> Branch -> State -> Prop :=
       res <> SContinue ->
       (*st' =[ c2 ]=> st'' / res2 ->*)
       st =[ c1 ; c2 ]=> st' / res
+  | E_SeqExpectReturn : forall c1 c2 st st' st'' (*st''*),
+      st =[ c1 ]=> st' / SContinue ->
+      st' =[ c2 ]=> st'' / SReturn ->
+      st =[ c1 ; c2 ]=> st'' / SReturn
+  | E_SeqHasReturn : forall c1 c2 st st' (*st''*),
+      st =[ c1 ]=> st' / SReturn ->
+      (*st' =[ c2 ]=> st'' / res2 ->*)
+      st =[ c1 ; c2 ]=> st' / SReturn
+  | E_SeqFinishWithReturn : forall c1 c2 st st' (*st''*),
+      st =[ c1 ]=> st' / SReturn ->
+      (*st' =[ c2 ]=> st'' / res2 ->*)
+      st =[ c1 ; c2 ]=> st' / SContinue
 
   (* Am comentat asta fiindca am inclus-o in E_Seq
   | E_SeqLoop2 : forall c1 c2 st st' st'',
@@ -1247,6 +1259,10 @@ Inductive ceval : com -> State -> Branch -> State -> Prop :=
       State2Bool st = true ->
       (remove_execution_stack_head st) =[ c ]=> st' / (SBr label) ->
       st =[ CIf label c ]=> st' / SContinue
+  | E_IfTrueReturn : forall st st' label c,
+      State2Bool st = true ->
+      (remove_execution_stack_head st) =[ c ]=> st' / SReturn ->
+      st =[ CIf label c ]=> st' / SReturn
   | E_IfFalse : forall st st' label c,
       State2Bool st = false ->
       (remove_execution_stack_head st) = st' ->
@@ -1276,6 +1292,9 @@ Inductive ceval : com -> State -> Branch -> State -> Prop :=
       label1 <> label2 ->
       (*st' =[ CLoop c ]=> st'' / SContinue -> (* st' =[ while c end ]=> st'' *) *)
       st =[ CBlock label1 c ]=> st' / SBr label2     (* st  =[ while c end ]=> st'' *)
+  | E_BlockReturn : forall st st' label c,
+      (st =[ c ]=> st' / SReturn ) ->
+      st =[ CBlock label c ]=> st' / SReturn     (* st  =[ while c end ]=> st'' *)
 
   | E_Br_IfTrue : forall st st' label,
       State2Bool st = true ->

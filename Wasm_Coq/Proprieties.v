@@ -1,19 +1,16 @@
 Set Warnings "-notation-overridden,-parsing".
 From Coq Require Import Bool.Bool.
 From Coq Require Import Init.Nat.
-From Coq Require Import Arith.Arith.
+(*From Coq Require Import Arith.Arith.*)
 From Coq Require Import Arith.EqNat.
-From Coq Require Import Lia.
+(*From Coq Require Import Lia.*)
 From Coq Require Import Lists.List.
 From Coq Require Import Strings.String.
 From Coq Require Import ZArith.Znat.
 From Coq Require Import ZArith.BinInt.
-From Coq Require Import ZArith.Zbool.
-From Coq Require Import Reals.RIneq.
-From Coq Require Import Classes.RelationClasses.
-Require Import Program.Wf.
+(*From Coq Require Import ZArith.Zbool.*)
+(*From Coq Require Import Reals.RIneq.*)
 Import N2Z.
-Import Zabs2N.
 Import ListNotations.
 
 From Coq Require Import ZArith.
@@ -26,19 +23,23 @@ From LF Require Import Maps Wasm.
 Open Scope Z.
 
 Open Scope positive_scope.
-Close Scope positive_scope.
 
 Lemma neg_div_pos_stays_neg :
-forall (p : positive) a, a > 0 ->
-(Z.neg p / a) <= 0.
+forall (a : positive) b, (b > 0)%Z ->
+((Z.neg a / b) <= 0)%Z.
 Proof.
 intros.
+induction a.
++ rewrite Pos.xI_succ_xO. Search (_~1). 
 Admitted.
+Close Scope positive_scope.
 
-Lemma small_div_is_0:
-forall (a b : Z), a < b -> a / b = 0.
+(*Lemma small_div_is_0:
+forall (a b : Z),
+a >= 0 ->
+a < b -> a / b = 0.
 Proof.
-Admitted.
+Admitted.*)
 
 Open Scope positive_scope.
 (* Demonstratia asta e redundanta dar o las aici sa imi amintesc
