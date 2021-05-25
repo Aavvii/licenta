@@ -3,6 +3,7 @@ From Coq Require Import Bool.Bool.
 From Coq Require Import Init.Nat.
 (*From Coq Require Import Arith.Arith.*)
 From Coq Require Import Arith.EqNat.
+From Coq Require Import Arith.Plus.
 (*From Coq Require Import Lia.*)
 From Coq Require Import Lists.List.
 From Coq Require Import Strings.String.
@@ -18,12 +19,31 @@ From Coq Require Import ZArith.
 
 From LF Require Import Maps Wasm.
 
-(* Admiited things that require extra attention *)
+(** Admiited things that require extra attention *)
 
 Open Scope Z.
 
-Open Scope positive_scope.
+Lemma a_plus_b_is_0 :
+forall n m,
+n = (-m) ->
+n + m = 0%Z.
+Proof.
+intros.
+rewrite H.
+rewrite Z.add_opp_diag_l.
+reflexivity.
+Qed.
 
+Lemma a_plus_b_is_NOT_0 :
+forall n m,
+n <> (-m) ->
+n <> 0 \/ m <> 0 ->
+(n + m =? 0) = false%Z.
+Proof.
+intros.
+Admitted.
+
+Open Scope positive_scope.
 Lemma neg_div_pos_stays_neg :
 forall (a : positive) b, (b > 0)%Z ->
 ((Z.neg a / b) <= 0)%Z.
@@ -57,7 +77,7 @@ Close Scope positive_scope.
 Close Scope Z.
 
 
-(* --------- General useful proprieties ---------*)
+(** General useful proprieties *)
 
 Open Scope Z.
 Lemma lt1_equiv_le0:
@@ -100,7 +120,56 @@ Qed.
 
 Close Scope Z.
 
-(* --------- Proprieties of execute_instruction function ---------*)
+(** Proprieties of functions defined by me*)
+Open Scope Z.
+Lemma load_8_from_adress_loads_1_byte :
+forall
+(pointer l str_start str_end : Z)
+(mem1 str_middle mem2: list MemoryByte)
+n,
+n = (load_8_from_adress pointer
+          (mem1 ++
+           (pointer, str_start)
+           :: str_middle ++ (pointer + l, str_end) :: mem2)) ->
+n <= 255 /\ n >= (-128).
+Admitted.
+
+Lemma signed2unsigned_of_not_0_is_not_0 :
+forall (n m : Z),
+n =? 0 = false ->
+(m = 1 /\ (n <= 255                  /\ n >= -128) ) \/
+(m = 2 /\ (n <= 65535                /\ n >= -32768) ) \/
+(m = 4 /\ (n <= 4294967295           /\ n >= -2147483648) ) \/
+(m = 8 /\ (n <= 18446744073709551615 /\ n >= -9223372036854775808) ) ->
+(signed2unsigned n m =? 0) = false.
+Proof.
+intros.
+unfold signed2unsigned.
+induction n.
+- inversion H.
+- unfold "<?". 
+  rewrite Zgt_pos_0. apply H.
+- unfold "<?".
+  rewrite Zlt_neg_0.
+  destruct H0.
++ destruct H0.
+  destruct H1.
+  rewrite H0.
+  rewrite a_plus_b_is_NOT_0.
+++ reflexivity.
+++
+apply Z.ge_le in H2.
+(*Search ( _ > _ -> _ ).
+Search ( _ >= _).*)
+unfold ">=" in H2.
+unfold "<>".
+Admitted.
+
+
+
+Close Scope Z.
+
+(** Proprieties of execute_instruction function*)
 Open Scope Z.
 Lemma eval_i32_ge_s_true:
 forall var_st ex_St glob_st fun_st mem a b, b >= a ->
