@@ -1193,7 +1193,7 @@ Inductive ceval : com -> State -> Branch -> State -> Prop :=
       st =[ CReturn ]=> st / SReturn
 
   | E_Call : forall name st st' st'' res,
-      (*get_function_body name st = c ->*) (* L-am pus sa sa singur c-ul*)
+      (*get_function_body name st = c ->*) (* L-am pus sa puna singur c-ul*)
       set_function_params name st = st' ->
       st' =[ get_function_body name st ]=> st'' / res ->
       st =[ CCall name ]=> st'' / SContinue
