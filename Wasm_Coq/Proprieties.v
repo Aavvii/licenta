@@ -124,13 +124,10 @@ Close Scope Z.
 Open Scope Z.
 Lemma load_8_from_adress_loads_1_byte :
 forall
-(pointer l str_start str_end : Z)
-(mem1 str_middle mem2: list MemoryByte)
+(pointer: Z)
+(mem : list MemoryByte)
 n,
-n = (load_8_from_adress pointer
-          (mem1 ++
-           (pointer, str_start)
-           :: str_middle ++ (pointer + l, str_end) :: mem2)) ->
+n = (load_8_from_adress pointer mem) ->
 n <= 255 /\ n >= (-128).
 Admitted.
 
