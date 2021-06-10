@@ -73,20 +73,8 @@ Inductive WasmDecl :=
 .
 
 Inductive com : Type :=
-  | CFunc (name : string) (param : WasmDecl) (result : WasmDecl) (c : com)
-  | CReturn
-  | CCall (name : string)
-  | CMemory (min max : Z)
-  | Ci32_Load8_u
-  | Ci32_Load8_u_offset (offset : Z)
-  | Ci32_Load
-  | CLocal (name : string) (type : string)
-  | CSkip
+  | CNop
   | CSeq (c1 c2 : com)
-  | CBr_If (label : string)
-  | CIf (label : string) (c : com)
-  | CLoop (label : string) (c : com)
-  | CBlock (label : string) (c : com)
   | Ci32_const (x : Z)
   | Ci64_const (x : Z)
   | Clocal_set (x : string)
@@ -112,6 +100,18 @@ Inductive com : Type :=
   | Ci64_eqz
   | Ci32_ge_s
   | Ci64_ge_s
+  | CFunc (name : string) (param : WasmDecl) (result : WasmDecl) (c : com)
+  | CReturn
+  | CCall (name : string)
+  | CMemory (min max : Z)
+  | Ci32_Load8_u
+  | Ci32_Load8_u_offset (offset : Z)
+  | Ci32_Load
+  | CLocal (name : string) (type : string)
+  | CBr_If (label : string)
+  | CIf (label : string) (c : com)
+  | CLoop (label : string) (c : com)
+  | CBlock (label : string) (c : com)
 .
 
 Eval compute in CLoop "a" (Ci32_const 5).
@@ -129,8 +129,8 @@ Definition FunctionList   := (list FunctionTuple)%type.
 Definition MemoryByte     := (Z * Z)%type.
 Definition MemoryList     := (list MemoryByte)%type.
 Definition Memory         := (Z * (list MemoryByte))%type.
-Definition State          := (
-ExecutionStack *
+Definition State          :=
+(ExecutionStack *
 VariableList *
 VariableList *
 FunctionList *
@@ -353,121 +353,7 @@ Close Scope Z.
 (**  Sfarsitul partii cu functii ajutatoare **)
 
 
-(* --- Impelemntari are functionalitatilor instructiunilor --- *)
-
-
-(* SET FUNCTION IN TABLE *)
-  (*Am mutat call function jos*)
-Definition set_function (name : string) (contents : com) (state : State) : State :=
-let exec_stack := get_execution_stack state in
-let loc_list := get_local_var_list state in
-let glob_list := get_global_var_list state in
-let func_list := get_func_list state in
-let memory_list := get_memory state in
-(exec_stack, loc_list, glob_list, ((name, contents):: func_list), memory_list).
-
-(* MEMORY DECLARATION *)
-
-Open Scope Z.
-Definition execute_memory (max : Z) (state : State) : State :=
-let exec_stack := get_execution_stack state in
-let loc_list := get_local_var_list state in
-let glob_list := get_global_var_list state in
-let func_list := get_func_list state in
-let memory := get_memory state in
-let memory_list := get_memory_list memory in
-let memory_size := if ((max * 65536) >? (get_memory_size memory)) then (max * 65536) else (get_memory_size memory) in
-(exec_stack, loc_list, glob_list, func_list, (memory_size, memory_list)).
-Close Scope Z.
-
-(* i32 LOAD 8 NO OFFSET *)
-
-Open Scope Z.
-Definition execute_i32_load8_u (state : State) : State :=
-let exec_stack := get_execution_stack state in
-let memory := get_memory state in
-let memory_list := get_memory_list memory in
-let memory_size := get_memory_size memory in
-let index := loose_integer_type (get_execution_stack_head exec_stack) in
-if index <? memory_size
-then
-  let loc_list := get_local_var_list state in
-  let glob_list := get_global_var_list state in
-  let func_list := get_func_list state in
-  ((i32 (signed2unsigned (load_8_from_adress index memory_list) 1))::(get_execution_stack_tail exec_stack),
-  loc_list,
-  glob_list,
-  func_list,
-  memory)
-else state.
-Close Scope Z.
-
-(* i32 LOAD 8 WITH OFFSET *)
-
-Open Scope Z.
-Definition execute_i32_load8_u_offset (state : State) (offset : Z) : State :=
-let exec_stack := get_execution_stack state in
-let memory := get_memory state in
-let memory_list := get_memory_list memory in
-let memory_size := get_memory_size memory in
-let index := (loose_integer_type (get_execution_stack_head exec_stack)) + offset in
-if index <? memory_size
-then
-  let loc_list := get_local_var_list state in
-  let glob_list := get_global_var_list state in
-  let func_list := get_func_list state in
-  ((i32 (signed2unsigned (load_8_from_adress index memory_list) 1))::(get_execution_stack_tail exec_stack),
-  loc_list,
-  glob_list,
-  func_list,
-  memory)
-else state.
-Close Scope Z.
-
-(* i32 LOAD*)
-Open Scope Z.
-Definition execute_i32_load(state : State) : State :=
-let exec_stack := get_execution_stack state in
-let memory := get_memory state in
-let memory_list := get_memory_list memory in
-let memory_size := get_memory_size memory in
-let index := loose_integer_type (get_execution_stack_head exec_stack) in
-if (index + 4) <? memory_size
-then
-  let loc_list := get_local_var_list state in
-  let glob_list := get_global_var_list state in
-  let func_list := get_func_list state in
-  let byte1 := ((*signed2unsigned*) (load_8_from_adress index memory_list) (*1*) ) in
-  let byte2 := ((*signed2unsigned*) (load_8_from_adress (index+1) memory_list) (*1*) ) in
-  let byte3 := ((*signed2unsigned*) (load_8_from_adress (index+2) memory_list) (*1*) ) in
-  let byte4 := ((*signed2unsigned*) (load_8_from_adress (index+3) memory_list) (*1*) ) in
-  let number :=
-    (unsigned2signed (byte1 + (Z.shiftl byte2 8) + (Z.shiftl byte3 16) + (Z.shiftl byte4 24)) 4)
-  in
-  ((i32 (number))::(get_execution_stack_tail exec_stack),
-  loc_list,
-  glob_list,
-  func_list,
-  memory)
-else state.
-Close Scope Z.
-
-(* LOCAL DECLARATION *)
-Definition execute_local_decl' (loc_list : VariableList) (var_name : string) (var_type : string) : VariableList :=
-if string_is_type var_type then
-(var_name, string2type var_type 0) :: loc_list
-else loc_list.
-Definition execute_local_decl (var_name : string) (var_type : string) (state : State)  : State :=
-let exec_stack := get_execution_stack state in
-let loc_list := get_local_var_list state in
-let glob_list := get_global_var_list state in
-let func_list := get_func_list state in
-let memory_list := get_memory state in
-(exec_stack,
-execute_local_decl' loc_list var_name var_type,
-glob_list,
-func_list,
-memory_list ).
+(** Impelemntari are functionalitatilor instructiunilor *)
 
 (* i32 CONST *)
 Definition execute_i32_const (n : Z) (state : State) : State :=
@@ -520,7 +406,7 @@ func_list,
 memory_list
 ).
 
-Definition local_set_precondition (state : State) (variable: string) : bool :=
+Definition local_set_type_check  (state : State) (variable: string) : bool :=
 let exec_stack := get_execution_stack state in
 let loc_list := get_local_var_list state in
 match_wasm_types (get_execution_stack_head exec_stack) (get_variable_from_stack variable loc_list).
@@ -530,7 +416,7 @@ match_wasm_types (get_execution_stack_head exec_stack) (get_variable_from_stack 
 Open Scope Z.
 Definition execute_i32_add' (exec_stack : ExecutionStack) : ExecutionStack :=
 match exec_stack with
-| i32 hd1 :: i32 hd2 :: tl => i32 (hd2 + hd1) :: tl
+| i32 hd1 :: i32 hd2 :: tl => i32 (Z.modulo (hd2 + hd1) 4294967296) :: tl
 | stack => stack
 end.
 Close Scope Z.
@@ -546,7 +432,7 @@ let memory_list := get_memory state in
 Open Scope Z.
 Definition execute_i64_add' (exec_stack : ExecutionStack) : ExecutionStack :=
 match exec_stack with
-| i64 hd1 :: i64 hd2 :: tl => i64 (hd2 + hd1) :: tl
+| i64 hd1 :: i64 hd2 :: tl => i64 (Z.modulo (hd2 + hd1) 18446744073709551616) :: tl
 | stack => stack
 end.
 Close Scope Z.
@@ -562,7 +448,7 @@ let memory_list := get_memory state in
 Open Scope Z.
 Definition execute_i32_sub' (exec_stack : ExecutionStack) : ExecutionStack :=
 match exec_stack with
-| i32 hd1 :: i32 hd2 :: tl => i32 (hd2 - hd1) :: tl
+| i32 hd1 :: i32 hd2 :: tl => i32 (Z.modulo (hd2 - hd1 + 4294967296) 4294967296) :: tl
 | stack => stack
 end.
 Close Scope Z.
@@ -579,7 +465,7 @@ let memory_list := get_memory state in
 Open Scope Z.
 Definition execute_i64_sub' (exec_stack : ExecutionStack) : ExecutionStack :=
 match exec_stack with
-| i64 hd1 :: i64 hd2 :: tl => i64 (hd2 - hd1) :: tl
+| i64 hd1 :: i64 hd2 :: tl => i64 (Z.modulo (hd2 - hd1 + 18446744073709551616) 18446744073709551616) :: tl
 | stack => stack
 end.
 Close Scope Z.
@@ -596,7 +482,7 @@ let memory_list := get_memory state in
 Open Scope Z.
 Definition execute_i32_mul' (exec_stack : ExecutionStack) : ExecutionStack :=
 match exec_stack with
-| i32 hd1 :: i32 hd2 :: tl => i32 (hd2 * hd1) :: tl
+| i32 hd1 :: i32 hd2 :: tl => i32 (Z.modulo (hd2 * hd1) 4294967296 ) :: tl
 | stack => stack
 end.
 Close Scope Z.
@@ -612,7 +498,7 @@ let memory_list := get_memory state in
 Open Scope Z.
 Definition execute_i64_mul' (exec_stack : ExecutionStack) : ExecutionStack :=
 match exec_stack with
-| i64 hd1 :: i64 hd2 :: tl => i64 (hd2 * hd1) :: tl
+| i64 hd1 :: i64 hd2 :: tl => i64 (Z.modulo (hd2 * hd1) 18446744073709551616 ) :: tl
 | stack => stack
 end.
 Close Scope Z.
@@ -859,7 +745,7 @@ match func_list with
 | hd :: tl => if string_dec name (get_function_name hd)
               then (get_function_content hd)
               else get_function_by_name' name tl
-| [] => CSkip
+| [] => CNop
 end.
 Definition get_function_by_name (name : string) (state : State) : com :=
 let func_list := get_func_list state in
@@ -868,7 +754,7 @@ get_function_by_name' name func_list.
 Definition get_function_body' (contents : com) : com :=
 match contents with
 | CFunc n p r coms => coms
-| _ => CSkip
+| _ => CNop
 end.
 Definition get_function_body (name : string) (state : State) : com :=
 let func_content := get_function_by_name name state in
@@ -882,6 +768,118 @@ match func with
                       end
 | _ => []
 end.
+
+(* SET FUNCTION IN TABLE *)
+Definition set_function (name : string) (contents : com) (state : State) : State :=
+let exec_stack := get_execution_stack state in
+let loc_list := get_local_var_list state in
+let glob_list := get_global_var_list state in
+let func_list := get_func_list state in
+let memory_list := get_memory state in
+(exec_stack, loc_list, glob_list, ((name, contents):: func_list), memory_list).
+
+(* MEMORY DECLARATION *)
+
+Open Scope Z.
+Definition execute_memory (max : Z) (state : State) : State :=
+let exec_stack := get_execution_stack state in
+let loc_list := get_local_var_list state in
+let glob_list := get_global_var_list state in
+let func_list := get_func_list state in
+let memory := get_memory state in
+let memory_list := get_memory_list memory in
+let memory_size := if ((max * 65536) >? (get_memory_size memory)) then (max * 65536) else (get_memory_size memory) in
+(exec_stack, loc_list, glob_list, func_list, (memory_size, memory_list)).
+Close Scope Z.
+
+(* i32 LOAD 8 NO OFFSET *)
+
+Open Scope Z.
+Definition execute_i32_load8_u (state : State) : State :=
+let exec_stack := get_execution_stack state in
+let memory := get_memory state in
+let memory_list := get_memory_list memory in
+let memory_size := get_memory_size memory in
+let index := loose_integer_type (get_execution_stack_head exec_stack) in
+if index <? memory_size
+then
+  let loc_list := get_local_var_list state in
+  let glob_list := get_global_var_list state in
+  let func_list := get_func_list state in
+  ((i32 (signed2unsigned (load_8_from_adress index memory_list) 1))::(get_execution_stack_tail exec_stack),
+  loc_list,
+  glob_list,
+  func_list,
+  memory)
+else state.
+Close Scope Z.
+
+(* i32 LOAD 8 WITH OFFSET *)
+
+Open Scope Z.
+Definition execute_i32_load8_u_offset (state : State) (offset : Z) : State :=
+let exec_stack := get_execution_stack state in
+let memory := get_memory state in
+let memory_list := get_memory_list memory in
+let memory_size := get_memory_size memory in
+let index := (loose_integer_type (get_execution_stack_head exec_stack)) + offset in
+if index <? memory_size
+then
+  let loc_list := get_local_var_list state in
+  let glob_list := get_global_var_list state in
+  let func_list := get_func_list state in
+  ((i32 (signed2unsigned (load_8_from_adress index memory_list) 1))::(get_execution_stack_tail exec_stack),
+  loc_list,
+  glob_list,
+  func_list,
+  memory)
+else state.
+Close Scope Z.
+
+(* i32 LOAD*)
+Open Scope Z.
+Definition execute_i32_load(state : State) : State :=
+let exec_stack := get_execution_stack state in
+let memory := get_memory state in
+let memory_list := get_memory_list memory in
+let memory_size := get_memory_size memory in
+let index := loose_integer_type (get_execution_stack_head exec_stack) in
+if (index + 4) <? memory_size
+then
+  let loc_list := get_local_var_list state in
+  let glob_list := get_global_var_list state in
+  let func_list := get_func_list state in
+  let byte1 := ((*signed2unsigned*) (load_8_from_adress index memory_list) (*1*) ) in
+  let byte2 := ((*signed2unsigned*) (load_8_from_adress (index+1) memory_list) (*1*) ) in
+  let byte3 := ((*signed2unsigned*) (load_8_from_adress (index+2) memory_list) (*1*) ) in
+  let byte4 := ((*signed2unsigned*) (load_8_from_adress (index+3) memory_list) (*1*) ) in
+  let number :=
+    (unsigned2signed (byte1 + (Z.shiftl byte2 8) + (Z.shiftl byte3 16) + (Z.shiftl byte4 24)) 4)
+  in
+  ((i32 (number))::(get_execution_stack_tail exec_stack),
+  loc_list,
+  glob_list,
+  func_list,
+  memory)
+else state.
+Close Scope Z.
+
+(* LOCAL DECLARATION *)
+Definition execute_local_decl' (loc_list : VariableList) (var_name : string) (var_type : string) : VariableList :=
+if string_is_type var_type then
+(var_name, string2type var_type 0) :: loc_list
+else loc_list.
+Definition execute_local_decl (var_name : string) (var_type : string) (state : State)  : State :=
+let exec_stack := get_execution_stack state in
+let loc_list := get_local_var_list state in
+let glob_list := get_global_var_list state in
+let func_list := get_func_list state in
+let memory_list := get_memory state in
+(exec_stack,
+execute_local_decl' loc_list var_name var_type,
+glob_list,
+func_list,
+memory_list ).
 
 Fixpoint get_nr_of_params (l : list string) : nat :=
 match l with
@@ -962,15 +960,10 @@ if (check_types stack_parameters param_types) then
   memory_list)
 else state.
 
-Definition execute_intruction (instrunction : exp)
+Definition execute_instruction (instrunction : exp)
                             (state : State)
                             : (State):=
 match instrunction with
-| local_decl v t            => execute_local_decl v t state
-| memory_decl m1 m2    => execute_memory m2 state
-| i32_load8_u          => execute_i32_load8_u state
-| i32_load8_u_offset i => execute_i32_load8_u_offset state i
-| i32_load    => execute_i32_load state
 | i32_const n => execute_i32_const n state
 | i64_const n => execute_i64_const n state
 | local_get n => execute_local_get n state
@@ -996,6 +989,11 @@ match instrunction with
 | i64_eqz     => execute_i64_eqz state
 | i32_ge_s    => execute_i32_ge_s state
 | i64_ge_s    => execute_i64_ge_s state
+| local_decl v t            => execute_local_decl v t state
+| memory_decl m1 m2    => execute_memory m2 state
+| i32_load8_u          => execute_i32_load8_u state
+| i32_load8_u_offset i => execute_i32_load8_u_offset state i
+| i32_load    => execute_i32_load state
 end.
 
 Definition State2Bool' (x : WasmType) : Z :=
@@ -1016,7 +1014,7 @@ Fixpoint execute_instructions (intructions : list exp)
                             (state : State)
                             : (State):=
 match intructions with
-| hd :: tl => execute_instructions tl ( execute_intruction hd state )
+| hd :: tl => execute_instructions tl ( execute_instruction hd state )
 | [] => state
 end.
 
@@ -1040,8 +1038,8 @@ Notation "'false'" := 0 (in custom com at level 0). *)
 Open Scope com_scope.
 
 (* Instructions flow*)
-Notation "'skip'" :=
-         CSkip (in custom com at level 0) : com_scope.
+Notation "'nop'" :=
+         CNop (in custom com at level 0) : com_scope.
 Notation " x ; y" :=
          (CSeq x y)
            (in custom com at level 90, right associativity) : com_scope.
@@ -1181,57 +1179,157 @@ Aici trebuie sa fie comenzi. Daca CAss e o comanda, in cazul tau, si add ar treb
 
 Reserved Notation "st '=[' c ']=>' st' '/' s"
      (at level 40, c custom com at level 99, st' constr at next level).
-Inductive ceval : com -> State -> Branch -> State -> Prop :=
-  | E_Func : forall st st' name param ret c ,
-      set_function name (CFunc name param ret c) st = st' ->
-      st =[ CFunc name param ret c ]=> st' / SContinue
-  | E_FuncStart : forall st st' st'' name param ret c ,
+Inductive ceval : com -> State -> Branch -> State -> Prop :=  
+
+  | E_Nop : forall st,
+      st =[ nop ]=> st / SContinue
+
+  | E_i32_const : forall st number,
+      st =[ i32.const number ]=> (execute_instruction (i32_const number) st ) / SContinue
+  | E_i64_const : forall st number,
+      st =[ i64.const number ]=> (execute_instruction (i64_const number) st ) / SContinue  
+
+  | E_i32_add : forall st st',
+      match_types_last_2_on_stack st = true ->
+      execute_instruction (i32_add) st = st' ->
+      st =[ i32.add ]=> st' / SContinue
+  | E_i64_add : forall st st',
+      match_types_last_2_on_stack st = true ->
+      execute_instruction (i64_add) st = st' ->
+      st =[ i64.add ]=> st' / SContinue
+
+  | E_i32_sub : forall st st',
+      match_types_last_2_on_stack st = true ->
+      execute_instruction (i32_sub) st = st' ->
+      st =[ i32.sub ]=> st' / SContinue
+  | E_i64_sub : forall st st',
+      match_types_last_2_on_stack st = true ->
+      execute_instruction (i64_sub) st = st' ->
+      st =[ i64.sub ]=> st' / SContinue
+
+  | E_i32_mul : forall st st',
+      match_types_last_2_on_stack st = true ->
+      execute_instruction (i32_mul) st = st' ->
+      st =[ i32.mul ]=> st' / SContinue
+  | E_i64_mul : forall st st',
+      match_types_last_2_on_stack st = true ->
+      execute_instruction (i64_mul) st = st' ->
+      st =[ i64.mul ]=> st' / SContinue
+
+  | E_i32_div_s : forall st st',
+      match_types_last_2_on_stack st = true ->
+      exec_stack_head_is_zero st = false ->
+      execute_instruction (i32_div_s) st = st' ->
+      st =[ i32.div_s ]=> st' / SContinue
+  | E_i64_div_s : forall st st',
+      match_types_last_2_on_stack st = true ->
+      exec_stack_head_is_zero st = false ->
+      execute_instruction (i64_div_s) st = st' ->
+      st =[ i64.div_s ]=> st' / SContinue
+
+  | E_i32_rem_s : forall st st',
+      match_types_last_2_on_stack st = true ->
+      exec_stack_head_is_zero st = false ->
+      execute_instruction (i32_rem_s) st = st' ->
+      st =[ i32.rem_s ]=> st' / SContinue
+  | E_i64_rem_s : forall st st',
+      match_types_last_2_on_stack st = true ->
+      exec_stack_head_is_zero st = false ->
+      execute_instruction (i64_rem_s) st = st' ->
+      st =[ i64.rem_s ]=> st' / SContinue
+
+  | E_i32_and : forall st st',
+      match_types_last_2_on_stack st = true ->
+      execute_instruction (i32_and) st = st' ->
+      st =[ i32.and ]=> st' / SContinue
+  | E_i64_and : forall st st',
+      match_types_last_2_on_stack st = true ->
+      execute_instruction (i64_and) st = st' ->
+      st =[ i64.and ]=> st' / SContinue
+
+  | E_i32_xor : forall st st',
+      match_types_last_2_on_stack st = true ->
+      execute_instruction (i32_xor) st = st' ->
+      st =[ i32.xor ]=> st' / SContinue
+  | E_i64_xor : forall st st',
+      match_types_last_2_on_stack st = true ->
+      execute_instruction (i64_xor) st = st' ->
+      st =[ i64.xor ]=> st' / SContinue
+
+  | E_i32_eq : forall st st',
+      match_types_last_2_on_stack st = true ->
+      execute_instruction (i32_eq) st = st' ->
+      st =[ i32.eq ]=> st' / SContinue
+  | E_i64_eq : forall st st',
+      match_types_last_2_on_stack st = true ->
+      execute_instruction (i64_eq) st = st' ->
+      st =[ i64.eq ]=> st' / SContinue
+
+  | E_i32_eqz : forall st st',
+      match_last_on_stack_with_type st (i32 0) = true ->
+      execute_instruction (i32_eqz) st = st' ->
+      st =[ i32.eqz ]=> st' / SContinue
+  | E_i64_eqz : forall st st',
+      match_last_on_stack_with_type st (i32 0) = true ->
+      execute_instruction (i64_eqz) st = st' ->
+      st =[ i64.eqz ]=> st' / SContinue
+
+  | E_i32_ge_s : forall st st',
+      match_types_last_2_on_stack st = true ->
+      execute_instruction (i32_ge_s) st = st' ->
+      st =[ i32.ge_s ]=> st' / SContinue
+  | E_i64_ge_s : forall st st',
+      match_types_last_2_on_stack st = true ->
+      execute_instruction (i64_ge_s) st = st' ->
+      st =[ i64.ge_s ]=> st' / SContinue
+
+  | E_Func : forall st st' name param res instr ,
+      set_function name (CFunc name param res instr) st = st' ->
+      st =[ CFunc name param res instr ]=> st' / SContinue
+  (*| E_FuncStart : forall st st' st'' name param ret c ,
       set_function name (CFunc name param ret c) st = st' ->
       st' =[ c ]=> st'' / SContinue ->
-      st =[ CFunc name param ret c ]=> st'' / SContinue
+      st =[ CFunc name param ret c ]=> st'' / SContinue*)
   | E_Return : forall st,
-      st =[ CReturn ]=> st / SReturn
+      st =[ return ]=> st / SReturn
 
   | E_Call : forall name st st' st'' res,
       (*get_function_body name st = c ->*) (* L-am pus sa puna singur c-ul*)
       set_function_params name st = st' ->
       st' =[ get_function_body name st ]=> st'' / res ->
-      st =[ CCall name ]=> st'' / SContinue
+      st =[ call name ]=> st'' / SContinue
 
   | E_Memory : forall min max st st',
-      (execute_intruction (memory_decl min max) st) = st' ->
-      st =[ CMemory min max]=> st' / SContinue
+      (execute_instruction (memory_decl min max) st) = st' ->
+      st =[ CMemory min max ]=> st' / SContinue
 
   | E_i32_Load8_u: forall st st',
-      execute_intruction (i32_load8_u) st = st' ->
+      execute_instruction (i32_load8_u) st = st' ->
       match_last_on_stack_with_type st (i32 0) = true ->
-      st =[ Ci32_Load8_u ]=> st' / SContinue
+      st =[ i32.load8_u ]=> st' / SContinue
   | E_i32_Load8_u_offset: forall offset st st',
-      execute_intruction (i32_load8_u_offset offset) st = st' ->
+      execute_instruction (i32_load8_u_offset offset) st = st' ->
       match_last_on_stack_with_type st (i32 0) = true ->
-      st =[ Ci32_Load8_u_offset offset ]=> st' / SContinue
+      st =[ i32.load8_u offset= offset ]=> st' / SContinue
   | E_i32_Load: forall st st',
-      execute_intruction (i32_load) st = st' ->
+      execute_instruction (i32_load) st = st' ->
       match_last_on_stack_with_type st (i32 0) = true ->
-      st =[ Ci32_Load ]=> st' / SContinue
+      st =[ i32.load ]=> st' / SContinue
 
   | E_Local : forall name type st st',
        (string_is_type type) = true ->
-       (execute_intruction (local_decl name type) st) = st' ->
+       (execute_instruction (local_decl name type) st) = st' ->
        st =[ CLocal name type ]=> st' / SContinue
-
-  | E_Skip : forall st,
-      st =[ skip ]=> st / SContinue
 
   | E_Seq : forall c1 c2 st st' st'' res,
       st =[ c1 ]=> st' / SContinue ->
       st' =[ c2 ]=> st'' / res ->
       st =[ c1 ; c2 ]=> st'' / res
-  | E_SeqBr : forall c1 c2 st st' res (*st''*),
-      st =[ c1 ]=> st' / res ->
-      res <> SContinue ->
+  | E_SeqBr : forall c1 c2 st st' label (*st''*),
+      st =[ c1 ]=> st' / SBr label ->
+      (*res <> SContinue ->*)
       (*st' =[ c2 ]=> st'' / res2 ->*)
-      st =[ c1 ; c2 ]=> st' / res
+      st =[ c1 ; c2 ]=> st' / SBr label
   | E_SeqExpectReturn : forall c1 c2 st st' st'' (*st''*),
       st =[ c1 ]=> st' / SContinue ->
       st' =[ c2 ]=> st'' / SReturn ->
@@ -1240,10 +1338,10 @@ Inductive ceval : com -> State -> Branch -> State -> Prop :=
       st =[ c1 ]=> st' / SReturn ->
       (*st' =[ c2 ]=> st'' / res2 ->*)
       st =[ c1 ; c2 ]=> st' / SReturn
-  | E_SeqFinishWithReturn : forall c1 c2 st st' (*st''*),
+  (*| E_SeqFinishWithReturn : forall c1 c2 st st' (*st''*),
       st =[ c1 ]=> st' / SReturn ->
       (*st' =[ c2 ]=> st'' / res2 ->*)
-      st =[ c1 ; c2 ]=> st' / SContinue
+      st =[ c1 ; c2 ]=> st' / SContinue*)
 
   (* Am comentat asta fiindca am inclus-o in E_Seq
   | E_SeqLoop2 : forall c1 c2 st st' st'',
@@ -1277,11 +1375,11 @@ Inductive ceval : com -> State -> Branch -> State -> Prop :=
       label1 <> label2 ->
       (*st' =[ CLoop c ]=> st'' / SContinue -> (* st' =[ while c end ]=> st'' *) *)
       st =[ CLoop label1 c ]=> st' / SBr label2     (* st  =[ while c end ]=> st'' *)
-  | E_Loop : forall st st' label1 c st'' label2,
+  | E_Loop : forall st st' label1 c st'' label2 res,
       st =[ c ]=> st' / SBr label2 ->
       label1 = label2 ->
-      st' =[ CLoop label1 c ]=> st'' / SContinue -> (* st' =[ while c end ]=> st'' *)
-      st =[ CLoop label1 c ]=> st'' / SContinue     (* st  =[ while c end ]=> st'' *)
+      st' =[ CLoop label1 c ]=> st'' / res -> (* st' =[ while c end ]=> st'' *)
+      st =[ CLoop label1 c ]=> st'' / res     (* st  =[ while c end ]=> st'' *)
 
   | E_Block : forall st st' (*st''*) label c,
       (st =[ c ]=> st' / SContinue) \/ (st =[ c ]=> st' / SBr label) ->
@@ -1306,116 +1404,18 @@ Inductive ceval : com -> State -> Branch -> State -> Prop :=
       st =[ CBr_If label ]=> st' / SContinue
 
   | E_local_set : forall st variable,
-      local_set_precondition st variable = true ->
+      local_set_type_check  st variable = true ->
       local_variable_exists variable st = true ->
-      st =[ Clocal_set variable ]=> (execute_intruction (local_set variable) st ) / SContinue
+      st =[ Clocal_set variable ]=> (execute_instruction (local_set variable) st ) / SContinue
   | E_local_get : forall st variable,
+      (*local_set_type_check  st variable = true ->*)
       local_variable_exists variable st = true ->
-      st =[ Clocal_get variable ]=> (execute_intruction (local_get variable) st ) / SContinue
+      st =[ Clocal_get variable ]=> (execute_instruction (local_get variable) st ) / SContinue
   | E_local_tee : forall st variable,
-      local_set_precondition st variable = true ->
+      local_set_type_check  st variable = true ->
       local_variable_exists variable st = true ->
-      st =[ Clocal_tee variable ]=> (execute_intruction (local_tee variable) st ) / SContinue
-  
+      st =[ Clocal_tee variable ]=> (execute_instruction (local_tee variable) st ) / SContinue
 
-  | E_i32_const : forall st variable,
-      st =[ Ci32_const variable ]=> (execute_intruction (i32_const variable) st ) / SContinue
-  | E_i64_const : forall st variable,
-      st =[ Ci64_const variable ]=> (execute_intruction (i64_const variable) st ) / SContinue  
-
-  | E_i32_add : forall st st',
-      match_types_last_2_on_stack st = true ->
-      execute_intruction (i32_add) st = st' ->
-      st =[ Ci32_add ]=> st' / SContinue
-  | E_i64_add : forall st st',
-      match_types_last_2_on_stack st = true ->
-      execute_intruction (i64_add) st = st' ->
-      st =[ Ci64_add ]=> st' / SContinue
-
-  | E_i32_sub : forall st st',
-      match_types_last_2_on_stack st = true ->
-      execute_intruction (i32_sub) st = st' ->
-      st =[ Ci32_sub ]=> st' / SContinue
-  | E_i64_sub : forall st st',
-      match_types_last_2_on_stack st = true ->
-      execute_intruction (i64_sub) st = st' ->
-      st =[ Ci64_sub ]=> st' / SContinue
-
-  | E_i32_mul : forall st st',
-      match_types_last_2_on_stack st = true ->
-      execute_intruction (i32_mul) st = st' ->
-      st =[ Ci32_mul ]=> st' / SContinue
-  | E_i64_mul : forall st st',
-      match_types_last_2_on_stack st = true ->
-      execute_intruction (i64_mul) st = st' ->
-      st =[ Ci64_mul ]=> st' / SContinue
-
-  | E_i32_div_s : forall st st',
-      match_types_last_2_on_stack st = true ->
-      exec_stack_head_is_zero st = false ->
-      execute_intruction (i32_div_s) st = st' ->
-      st =[ Ci32_div_s ]=> st' / SContinue
-  | E_i64_div_s : forall st st',
-      match_types_last_2_on_stack st = true ->
-      exec_stack_head_is_zero st = false ->
-      execute_intruction (i64_div_s) st = st' ->
-      st =[ Ci64_div_s ]=> st' / SContinue
-
-  | E_i32_rem_s : forall st st',
-      match_types_last_2_on_stack st = true ->
-      exec_stack_head_is_zero st = false ->
-      execute_intruction (i32_rem_s) st = st' ->
-      st =[ Ci32_rem_s ]=> st' / SContinue
-  | E_i64_rem_s : forall st st',
-      match_types_last_2_on_stack st = true ->
-      exec_stack_head_is_zero st = false ->
-      execute_intruction (i64_rem_s) st = st' ->
-      st =[ Ci64_rem_s ]=> st' / SContinue
-
-  | E_i32_and : forall st st',
-      match_types_last_2_on_stack st = true ->
-      execute_intruction (i32_and) st = st' ->
-      st =[ Ci32_and ]=> st' / SContinue
-  | E_i64_and : forall st st',
-      match_types_last_2_on_stack st = true ->
-      execute_intruction (i64_and) st = st' ->
-      st =[ Ci64_and ]=> st' / SContinue
-
-  | E_i32_xor : forall st st',
-      match_types_last_2_on_stack st = true ->
-      execute_intruction (i32_xor) st = st' ->
-      st =[ Ci32_xor ]=> st' / SContinue
-  | E_i64_xor : forall st st',
-      match_types_last_2_on_stack st = true ->
-      execute_intruction (i64_xor) st = st' ->
-      st =[ Ci64_xor ]=> st' / SContinue
-
-  | E_i32_eq : forall st st',
-      match_types_last_2_on_stack st = true ->
-      execute_intruction (i32_eq) st = st' ->
-      st =[ Ci32_eq ]=> st' / SContinue
-  | E_i64_eq : forall st st',
-      match_types_last_2_on_stack st = true ->
-      execute_intruction (i64_eq) st = st' ->
-      st =[ Ci64_eq ]=> st' / SContinue
-
-  | E_i32_eqz : forall st st',
-      match_last_on_stack_with_type st (i32 0) = true ->
-      execute_intruction (i32_eqz) st = st' ->
-      st =[ Ci32_eqz ]=> st' / SContinue
-  | E_i64_eqz : forall st st',
-      match_last_on_stack_with_type st (i32 0) = true ->
-      execute_intruction (i64_eqz) st = st' ->
-      st =[ Ci64_eqz ]=> st' / SContinue
-
-  | E_i32_ge_s : forall st st',
-      match_types_last_2_on_stack st = true ->
-      execute_intruction (i32_ge_s) st = st' ->
-      st =[ Ci32_ge_s ]=> st' / SContinue
-  | E_i64_ge_s : forall st st',
-      match_types_last_2_on_stack st = true ->
-      execute_intruction (i64_ge_s) st = st' ->
-      st =[ Ci64_ge_s ]=> st' / SContinue
 
 where "st =[ c ]=> st' / s " := (ceval c st s st').
 

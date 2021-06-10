@@ -43,6 +43,13 @@ Proof.
 intros.
 Admitted.
 
+Lemma a_le_n_implies_a_diff_n_plus_1 :
+forall (a n : Z),
+a <= n -> a <> n+1.
+Proof.
+intros.
+Admitted.
+
 Open Scope positive_scope.
 Lemma neg_div_pos_stays_neg :
 forall (a : positive) b, (b > 0)%Z ->
@@ -124,14 +131,11 @@ Close Scope Z.
 Open Scope Z.
 Lemma load_8_from_adress_loads_1_byte :
 forall
-(pointer l str_start str_end : Z)
-(mem1 str_middle mem2: list MemoryByte)
+(pointer : Z)
+(mem: list MemoryByte)
 n,
-n = (load_8_from_adress pointer
-          (mem1 ++
-           (pointer, str_start)
-           :: str_middle ++ (pointer + l, str_end) :: mem2)) ->
-n <= 255 /\ n >= (-128).
+n = (load_8_from_adress pointer mem) ->
+n <= 255 /\ n >= 0.
 Admitted.
 
 Lemma signed2unsigned_of_not_0_is_not_0 :
@@ -165,15 +169,67 @@ unfold ">=" in H2.
 unfold "<>".
 Admitted.
 
-
+Lemma unsigned2signed_of_not_0_is_not_0 :
+forall (n m : Z),
+n =? 0 = false ->
+(m = 1 /\ (n <= 255                  /\ n >= -128) ) \/
+(m = 2 /\ (n <= 65535                /\ n >= -32768) ) \/
+(m = 4 /\ (n <= 4294967295           /\ n >= -2147483648) ) \/
+(m = 8 /\ (n <= 18446744073709551615 /\ n >= -9223372036854775808) ) ->
+(unsigned2signed n m =? 0) = false.
+Proof.
+intros.
+unfold unsigned2signed.
+destruct H0.
+- induction n.
++ inversion H.
++ unfold ">=?".
+  rewrite Zgt_pos_0.
+destruct H0.
+destruct H1.
+rewrite H0.
+unfold signBitIsOne.
+unfold "<?".
+rewrite Zgt_pos_0.
+case_eq (Z.pos p >? 127).
+++ intros.
+unfold "=?".
+apply a_plus_b_is_NOT_0.
++++ simpl.
+Admitted.
 
 Close Scope Z.
 
 (** Proprieties of execute_instruction function*)
 Open Scope Z.
-Lemma eval_i32_ge_s_true:
-forall var_st ex_St glob_st fun_st mem a b, b >= a ->
-execute_intruction (i32_ge_s) ((i32 a :: i32 b :: ex_St), var_st, glob_st, fun_st, mem) = ( i32 1:: ex_St,var_st, glob_st, fun_st, mem).
+
+(*Lemma gt :
+forall (a b : Z),
+(b >= a) = ((b >=? a) = true).
+Proof.
+intros.
+Search (_ >=? _ = true).*)
+
+Lemma eval_i32_ge_s_true 
+(*cu mici modificari in loop_invariant_ge_10*):
+forall var_st ex_St glob_st fun_st mem a b,
+(b >=? a = true) ->
+execute_instruction (i32_ge_s) ((i32 a :: i32 b :: ex_St), var_st, glob_st, fun_st, mem) = ( i32 1:: ex_St,var_st, glob_st, fun_st, mem).
+Proof.
+intros var_st ex_St glob_st fun_st mem a b.
+intros a_greater_than_b.
+simpl.
+unfold execute_i32_ge_s.
+simpl.
+rewrite a_greater_than_b.
+rewrite Z.geb_leb in a_greater_than_b.
+reflexivity.
+Qed.
+
+Lemma eval_i32_ge_s_true_old:
+forall var_st ex_St glob_st fun_st mem a b,
+b >= a ->
+execute_instruction (i32_ge_s) ((i32 a :: i32 b :: ex_St), var_st, glob_st, fun_st, mem) = ( i32 1:: ex_St,var_st, glob_st, fun_st, mem).
 Proof.
 intros var_st ex_St glob_st fun_st mem a b.
 intros a_greater_than_b.
@@ -216,7 +272,7 @@ Qed.
 
 Lemma eval_i32_ge_s_false:
 forall var_st ex_St glob_st fun_st mem a b, b < a ->
-execute_intruction (i32_ge_s) ((i32 a :: i32 b :: ex_St), var_st, glob_st, fun_st, mem) = ( i32 0:: ex_St,var_st, glob_st, fun_st, mem).
+execute_instruction (i32_ge_s) ((i32 a :: i32 b :: ex_St), var_st, glob_st, fun_st, mem) = ( i32 0:: ex_St,var_st, glob_st, fun_st, mem).
 Proof.
 intros var_st ex_St glob_st fun_st mem a b.
 intros a_greater_than_b.
@@ -246,6 +302,85 @@ try (assert ((Z.neg p >=? 0) = false);unfold "<" in a_greater_than_b; unfold ">=
 try (assert ((Z.neg p >=? Z.pos p0) = false);unfold "<" in a_greater_than_b; unfold ">=?"; rewrite a_greater_than_b; reflexivity; rewrite H; reflexivity).
 -- unfold execute_i32_ge_s. unfold execute_i32_ge_s'. unfold get_execution_stack. simpl.
 try (assert ((Z.neg p >=? Z.neg p0) = false);unfold "<" in a_greater_than_b; unfold ">=?"; rewrite a_greater_than_b; reflexivity; rewrite H; reflexivity).
+Qed.
+
+Open Scope com_scope.
+
+
+(*Lemma plus_comm1 :
+forall (a b: Z)
+(ex_st : list WasmType)
+(var_st glob_st : VariableList)
+(fun_st : FunctionList)
+(mem : Memory),
+(( (i32 a)::(i32 b)::ex_st), var_st ,glob_st ,fun_st, mem)=[
+i32.add
+]=> ( (i32 ((b+a)mod 4294967296)::ex_st), var_st ,glob_st ,fun_st, mem) / SContinue.
+Proof.
+intros.
+apply E_i32_add.
+- reflexivity.
+- simpl.
+  unfold execute_i32_add.
+  simpl.
+  reflexivity.
+Qed.
+
+Lemma plus_comm2 :
+forall (a b: Z)
+(ex_st : list WasmType)
+(var_st glob_st : VariableList)
+(fun_st : FunctionList)
+(mem : Memory),
+(( (i32 b)::(i32 a)::ex_st), var_st ,glob_st ,fun_st, mem)=[
+i32.add
+]=> ( (i32 ((a+b)mod 4294967296)::ex_st), var_st ,glob_st ,fun_st, mem) / SContinue.
+Proof.
+intros.
+apply E_i32_add.
+- reflexivity.
+- simpl.
+  unfold execute_i32_add.
+  simpl.
+  reflexivity.
+Qed.*)
+
+Lemma plus_comm :
+forall (a b: Z)
+(ex_st : list WasmType)
+(var_st glob_st : VariableList)
+(fun_st : FunctionList)
+(mem : Memory),
+
+execute_instruction (i32_add) (( (i32 a)::(i32 b)::ex_st), var_st ,glob_st ,fun_st, mem) =
+execute_instruction (i32_add) (( (i32 b)::(i32 a)::ex_st), var_st ,glob_st ,fun_st, mem).
+Proof.
+intros.
+simpl.
+unfold execute_i32_add.
+simpl.
+rewrite Z.add_comm.
+reflexivity.
+Qed.
+
+Lemma xor_n_n :
+forall (n : Z)
+(ex_st : list WasmType)
+(var_st glob_st : VariableList)
+(fun_st : FunctionList)
+(mem : Memory),
+(( (i32 n)::(i32 n)::ex_st), var_st ,glob_st ,fun_st, mem)=[
+i32.xor
+]=> ( (i32 (0)::ex_st), var_st ,glob_st ,fun_st, mem) / SContinue.
+Proof.
+intros.
+apply E_i32_xor.
+- reflexivity.
+- simpl.
+  unfold execute_i32_xor.
+  simpl.
+  rewrite Z.lxor_nilpotent.
+  reflexivity.
 Qed.
 
 Close Scope Z.

@@ -56,8 +56,8 @@ Eval compute in execute_i64_add stacks_example_1.
 
 Eval compute in execute_i32_eq stacks_example_1.
 
-Eval compute in execute_intruction (i32_and) stacks_example_1.
-Eval compute in execute_intruction (i64_and) stacks_example_1.
+Eval compute in execute_instruction (i32_and) stacks_example_1.
+Eval compute in execute_instruction (i64_and) stacks_example_1.
 
 Definition execution_stack_example2 := [i64 5; i64 4].
 Definition variable_stack_example2 := [("b", i32 2);("a", i32 7)].
@@ -78,7 +78,7 @@ Close Scope string_scope.
 
 (* ---------------------------- Testing execute_instructions ------------------------- *)
 Open Scope string_scope.
-Eval compute in execute_intruction (i32_const (5)) stacks_example_1.
+Eval compute in execute_instruction (i32_const (5)) stacks_example_1.
 
 Definition empty_stacks := make_state [] [] [] [] (0%Z, []).
 
@@ -146,6 +146,17 @@ Eval compute in ceval attempt1.
 Open Scope Z.
 
 (* --- Testing 'const', 'add', 'get', 'set' instructions with no flow control --- *)
+
+Example example_nop :
+([], [(var_a, i32 0); (var_b, (i32 0))], [], [], (0%Z, [])) =[
+CNop;
+Ci32_const 5
+]=>([i32 5], [(var_a, i32 0); (var_b, (i32 0))], [], [], (0%Z, [])) / SContinue.
+Proof.
+apply E_Seq with ([], [(var_a, i32 0); (var_b, (i32 0))], [], [], (0%Z, [])).
+- apply E_Nop.
+- apply E_i32_const.
+Qed.
 
 Example example_no_if_no_while:
 ([], [(var_a, i32 0); (var_b, (i32 0))], [], [], (0%Z, [])) =[
@@ -351,7 +362,7 @@ Proof.
 apply E_Seq with ([] , [(var_a, i32 44); (var_b, i32 0)],[],[], (0%Z, [])).
 - apply E_Loop with ([] , [(var_a, i32 1); (var_b, i32 0)],[],[], (0%Z, [])) label1.
 -- apply E_Seq with ([i32 0] , [(var_a, i32 0); (var_b, i32 0)],[],[], (0%Z, [])).
---- apply E_local_get. auto.
+--- apply E_local_get. auto. 
 --- apply E_Seq with ([i32 1 ;i32 0] , [(var_a, i32 0); (var_b, i32 0)],[],[], (0%Z, [])).
 ---- apply E_i32_const.
 ---- apply E_Seq with ([i32 1] , [(var_a, i32 0); (var_b, i32 0)],[],[], (0%Z, [])).
@@ -368,7 +379,7 @@ apply E_Seq with ([] , [(var_a, i32 44); (var_b, i32 0)],[],[], (0%Z, [])).
 ----------- apply E_Br_IfTrue.
 ------------ reflexivity.
 ------------ reflexivity.
------------ discriminate.
+(*----------- discriminate.*)
 -- trivial.
 -- apply E_LoopOnce.
 --- apply E_Seq with ([i32 1] , [(var_a, i32 1); (var_b, i32 0)],[],[], (0%Z, [])).
@@ -671,6 +682,9 @@ apply E_Seq with ([i32 0], [(IN, i32 123) ;(inv, i32 0); (temp, i32 0)],[],[], (
 ------ apply E_local_get.  auto.
 Qed.
 
+(*
+(* Exemplul asta nu mai are sens
+fiindca am decis sa exclud E_FuncStart *)
 Example example_func_empty:
 ([],[],[],[], (0%Z, [])) =[
 func (func1) (param type_i32_l) (result type_i32)
@@ -683,6 +697,7 @@ apply E_FuncStart with ([],[],[],[((func1) , CFunc (func1) (param type_i32_l) (r
 - reflexivity.
 - apply E_i32_const.
 Qed.
+*)
 
 Example example_func_declalaration:
 ([],[],[],[], (0%Z, [])) =[
@@ -699,6 +714,11 @@ Definition func_mul_example :=
 (Ci32_const 10);
 (Ci32_const 3);
 Ci32_mul}>).
+
+(*
+(* Exemplul asta a devenit irelevant
+fiindca am decis sa exclud E_FuncStart *)
+
 Example example_func_mul:
 ([],[],[],[], (0%Z, [])) =[
 func (func1) (param type_i32_l) (result type_i32)
@@ -714,7 +734,7 @@ apply E_FuncStart with ([],[],[],[(func1, func_mul_example)], (0%Z, [])).
 -- apply E_Seq with ([i32 3; i32 10] , [],[],[(func1, func_mul_example)], (0%Z, [])).
 --- apply E_i32_const.
 --- apply E_i32_mul. auto. auto.
-Qed.
+Qed.*)
 
 Example example_local_decl:
 ([],[],[],[], (0%Z, [])) =[
@@ -734,6 +754,9 @@ Definition func_with_decl :=
 Ci32_mul;
 Clocal_set var_a;
 Clocal_get var_a}>.
+(*
+(* Exemplul asta nu mai are sens
+fiindca am decis sa exclud E_FuncStart *)
 Example example_func_with_decl:
 ([],[],[],[], (0%Z, [])) =[
 func_with_decl
@@ -753,6 +776,7 @@ apply E_FuncStart with ([],[],[],[(func1, func_with_decl)], (0%Z, [])).
 ------ apply E_local_set. reflexivity.  auto.
 ------ apply E_local_get. auto.
 Qed.
+*)
 
 Eval compute in get_function_by_name func1 ([i32 5], [], [], [(func1, func_mul_example)], (0, [])).
 Eval compute in get_param_types (get_function_by_name func1 ([i32 5], [], [], [(func1, func_mul_example)], (0, []))).
@@ -775,6 +799,9 @@ Eval compute in set_function func2
    func_call
     ([], [], [], [(func1, func_mul_example)], (0, [])).
 
+(*
+(* Exemplul asta nu mai are sens
+fiindca am decis sa exclud E_FuncStart *)
 Example func_call_example :
 ([],[],[],[], (0%Z, [])) =[
 func_mul_example ;
@@ -789,7 +816,7 @@ apply E_Func.
 -- apply E_Seq with ([i32 5],[],[],[(func2, func_call);(func1, func_mul_example)], (0%Z, [])).
 --- apply E_i32_const.
 --- apply E_Seq with ([i32 30],[("0",i32 5)],[],[(func2, func_call);(func1, func_mul_example)], (0%Z, [])).
----- apply E_Call with ([],[("0",i32 5)],[],[(func2, func_call);(func1, func_mul_example)], (0%Z, [])).
+---- apply E_Call with ([],[("0",i32 5)],[],[(func2, func_call);(func1, func_mul_example)], (0%Z, [])) SContinue.
 ----- reflexivity.
 ----- apply E_Seq with ([i32 10],[("0",i32 5)],[],[(func2, func_call);(func1, func_mul_example)], (0%Z, [])).
 ------ apply E_i32_const.
@@ -799,9 +826,9 @@ apply E_Func.
 ---- apply E_Seq with ([i32 5; i32 30], [("0", i32 5)], [], [(func2, func_call);(func1, func_mul_example)], (0, [])).
 ----- apply E_i32_const.
 ----- apply E_i32_add. auto. auto.
-Qed.
+Qed.*)
 
-(*Eval compute in execute_intruction (<{memory 1 1}>) ([], [], [], [], (0, [])).*)
+(*Eval compute in execute_instruction (<{memory 1 1}>) ([], [], [], [], (0, [])).*)
 
 Example memory_example :
 ([],[],[],[], (0, [])) =[
