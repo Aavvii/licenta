@@ -3,20 +3,17 @@ From Coq Require Import Bool.Bool.
 From Coq Require Import Init.Nat.
 From Coq Require Import Arith.Arith.
 From Coq Require Import Arith.EqNat.
-(*From Coq Require Import Lia.*)
 From Coq Require Import Lists.List.
 From Coq Require Import Strings.String.
 From Coq Require Import ZArith.Znat.
 From Coq Require Import ZArith.BinInt.
 From Coq Require Import ZArith.Zbool.
-(*From Coq Require Import Reals.RIneq.*)
 From Coq Require Import Classes.RelationClasses.
 Require Import Program.Wf.
 Import N2Z.
 Import Z2Nat.
 Import Zabs2N.
 Import ListNotations.
-(*Open Scope R_scope.*)
 
 From LF Require Import Maps Wasm Proprieties.
 
@@ -33,6 +30,8 @@ Definition v3 : string := "3".
 Open Scope string_scope.
 Open Scope com_scope.
 Open Scope Z.
+
+(** Definirea lungimii unui string *)
 
 Fixpoint len' (index : Z) (mem : MemoryList) (memsize : nat) : Z :=
 match memsize with
@@ -80,6 +79,7 @@ induction (Z.to_nat memsize).
 - rewrite H. simpl. reflexivity.
 Qed.
 
+(** Definirea in Coq a functiei strlen compilata in WebAssembly *)
 
 Open Scope string_scope.
 Definition fun_strlen :=
@@ -156,6 +156,8 @@ Definition fun_strlen :=
 }>.
 Close Scope string_scope.
 
+(** Definirea unor functii si proprietati ajutatoare *)
+
 Definition four_byte_value_notation
 (pointer n l str_start str_end : Z)
 (mem1 str_middle mem2: list MemoryByte)
@@ -187,83 +189,36 @@ let byte4 :=
 
 (unsigned2signed (byte1 + (Z.shiftl byte2 8) + (Z.shiftl byte3 16) + (Z.shiftl byte4 24)) 4).
 
-(*
-Lemma four_byte_value_notation_lt_429496729 :
-forall (pointer n l str_start str_end : Z)
-(mem1 str_middle mem2: list MemoryByte),
-
-0 <= (load_8_from_adress (pointer + n)
-    (mem1 ++
-     (pointer, str_start)
-     :: str_middle ++ (pointer + l, str_end) :: mem2)) < 255 ->
-0 <= (load_8_from_adress (pointer + n + 1)
-    (mem1 ++
-     (pointer, str_start)
-     :: str_middle ++ (pointer + l, str_end) :: mem2)) < 255 ->
-0 <= (load_8_from_adress (pointer + n + 2)
-    (mem1 ++
-     (pointer, str_start)
-     :: str_middle ++ (pointer + l, str_end) :: mem2)) < 255 ->
-0 <= (load_8_from_adress (pointer + n + 3)
-    (mem1 ++
-     (pointer, str_start)
-     :: str_middle ++ (pointer + l, str_end) :: mem2)) < 255 ->
-
-(four_byte_value_notation pointer n l str_start str_end mem1 str_middle mem2) < 429496729.
-Proof.
-intros.
-unfold four_byte_value_notation.
-(*Search ( Z.shiftl _).*)
-unfold unsigned2signed.
-induction (load_8_from_adress (pointer + n)
-    (mem1 ++
-     (pointer, str_start)
-     :: str_middle ++ (pointer + l, str_end) :: mem2)).
-- induction (load_8_from_adress (pointer + n + 1)
-    (mem1 ++
-     (pointer, str_start)
-     :: str_middle ++ (pointer + l, str_end) :: mem2)).
--- induction (load_8_from_adress (pointer + n + 2)
-    (mem1 ++
-     (pointer, str_start)
-     :: str_middle ++ (pointer + l, str_end) :: mem2)).
---- induction (load_8_from_adress (pointer + n + 3)
-    (mem1 ++
-     (pointer, str_start)
-     :: str_middle ++ (pointer + l, str_end) :: mem2)).
----- simpl. reflexivity.
----- rewrite Z.shiftl_0_l.
-     rewrite Z.add_0_l.
-     unfold signBitIsOne.
-unfold ">=?".
-Search (Z.shiftl _ ).
-destruct Z.shiftl_nonneg with (Z.pos p) 24.
-Admitted.
-(*destruct H2.
-destruct H4.
------ apply H2.
------ apply Z.compare_gt_iff.*)
-(*Search (_ + _).*)
-(* Suma pe un numar de 4 biti este mereu un numar mai mic decat 429496729 *)
-*)
-
-
-(*Lemma four_byte_value_notation_and_255 :
-forall n
-(pointer l str_start str_end : Z)
-(mem1 str_middle mem2: list MemoryByte),
-load_8_from_adress pointer
+Definition four_byte_value_notation_for_empty_str_case
+(pointer n str_start : Z)
+(mem1 mem2: list MemoryByte)
+: Z :=
+let byte1 :=
+( (*signed2unsigned*)
+          (load_8_from_adress (pointer+n)
              (mem1 ++
               (pointer, str_start)
-              :: str_middle ++ (pointer + l, str_end) :: mem2) = n
-->
-(Z.land (four_byte_value_notation pointer l str_start str_end mem1 str_middle mem2) 255) = n.
-Proof.
-intros.
-unfold four_byte_value_notation.
-rewrite H.
-unfold signed2unsigned.
-Admitted.*)
+              :: mem2)) (*1*)) in
+let byte2 := 
+( (*signed2unsigned*)
+          (load_8_from_adress (pointer+n+1)
+             (mem1 ++
+              (pointer, str_start)
+              :: mem2)) (*1*)) in
+let byte3 :=
+((*signed2unsigned*)
+          (load_8_from_adress (pointer+n+2)
+             (mem1 ++
+              (pointer, str_start)
+              :: mem2)) (*1*)) in
+let byte4 :=
+((*signed2unsigned*)
+          (load_8_from_adress (pointer+n+3)
+             (mem1 ++
+              (pointer, str_start)
+              :: mem2)) (*1*)) in
+
+(unsigned2signed (byte1 + (Z.shiftl byte2 8) + (Z.shiftl byte3 16) + (Z.shiftl byte4 24)) 4).
 
 Definition is_any_byte_0 (n : Z) :=
 let nr_unsigned := (signed2unsigned n 4) in
@@ -349,6 +304,8 @@ func_list1 ++ [(strlen, fun_strlen)] ++ func_list2,
 (memsize, mem1 ++ [(pointer, str_start)] ++ str_middle ++ [(pointer + l, str_end)] ++ mem2))
 =[*)
 
+(** Demonstrarea invariantului pentru prima structura repetitiva *)
+
 Definition strlen_loop1_invariant_v1_cases
 (pointer l str_start str_end : Z)
 (mem1 str_middle mem2: list MemoryByte) :=
@@ -430,7 +387,7 @@ mem1 ++
 [(pointer, str_start)] ++
 str_middle ++ [(pointer + l, str_end)] ++ mem2)).
 -- apply E_local_get. auto.
--- apply E_Seq with ([i32 (signed2unsigned (load_8_from_adress pointer (mem1 ++ [(pointer, str_start)] ++ str_middle ++ [(pointer + l, str_end)] ++ mem2)) 1)],
+-- apply E_Seq with ([i32 ((* signed2unsigned *) (load_8_from_adress pointer (mem1 ++ [(pointer, str_start)] ++ str_middle ++ [(pointer + l, str_end)] ++ mem2)) (* 1 *))],
 (v3, i32 var_3)
 :: (v2, i32 var_2)
    :: (v1, i32 pointer) :: (v0, i32 pointer) :: loc_list,
@@ -463,8 +420,12 @@ str_middle ++ [(pointer + l, str_end)] ++ mem2)).
 ----- unfold execute_i32_eqz. unfold execute_instruction.
       unfold execute_i32_eqz. unfold execute_i32_eqz'.
       unfold get_execution_stack.
-      rewrite signed2unsigned_of_not_0_is_not_0.
+(*       rewrite signed2unsigned_of_not_0_is_not_0. *)
+      simpl in  H0.
+      simpl.
+      rewrite H0.
 ------ reflexivity.
+(* ---- 
 ------ apply H0.
 ------ left. split. reflexivity.
 simpl. split. apply load_8_from_adress_loads_1_byte with 
@@ -489,7 +450,7 @@ destruct load_byte with pointer
 (*
 -------- reflexivity.
 -------- Search (_ <> Lt). rewrite Z.compare_ge_iff.
-*)
+*) *)
 ---- apply E_Seq with ([],
 (v3, i32 var_3)
 :: (v2, i32 var_2)
@@ -632,11 +593,11 @@ mem1 ++
 [(pointer, str_start)] ++ str_middle ++ [(pointer + l, str_end)] ++ mem2)).
 - apply E_local_get. auto.
 - apply E_Seq with ([i32
-(signed2unsigned
+((* signed2unsigned *)
        (load_8_from_adress (pointer + n)
           (mem1 ++
            (pointer, str_start)
-           :: str_middle ++ (pointer + l, str_end) :: mem2)) 1)],
+           :: str_middle ++ (pointer + l, str_end) :: mem2)) (* 1 *))],
 (v3, i32 var_3)
 :: (v2, i32 var_1) :: (v1, i32 (pointer + n)) :: (v0, i32 var_0) :: loc_list,
 glob_list, func_list1 ++ [(strlen, fun_strlen)] ++ func_list2,
@@ -647,7 +608,11 @@ mem1 ++
 --- unfold execute_instruction.
     unfold execute_i32_load8_u.
     simpl. unfold "<?". rewrite H.
-    reflexivity.
+    simpl in H0.
+    simpl.
+  reflexivity. (* 
+    rewrite H0.
+    reflexivity. *)
 --- auto.
 -- apply E_Seq with ([i32 1],
 (v3, i32 var_3)
@@ -724,7 +689,7 @@ mem1 ++
 [(pointer, str_start)] ++
 str_middle ++ [(pointer + l, str_end)] ++ mem2)).
 -- apply E_local_get. auto.
--- apply E_Seq with ([i32 (signed2unsigned (load_8_from_adress pointer (mem1 ++ [(pointer, str_start)] ++ str_middle ++ [(pointer + l, str_end)] ++ mem2)) 1)],
+-- apply E_Seq with ([i32 ((* signed2unsigned *) (load_8_from_adress pointer (mem1 ++ [(pointer, str_start)] ++ str_middle ++ [(pointer + l, str_end)] ++ mem2)) (* 1 *))],
 (v3, i32 var_3)
 :: (v2, i32 var_2)
    :: (v1, i32 pointer) :: (v0, i32 pointer) :: loc_list,
@@ -757,9 +722,10 @@ str_middle ++ [(pointer + l, str_end)] ++ mem2)).
 ----- unfold execute_i32_eqz. unfold execute_instruction.
       unfold execute_i32_eqz. unfold execute_i32_eqz'.
       unfold get_execution_stack.
-      rewrite signed2unsigned_of_not_0_is_not_0.
+      simpl. simpl in H0. rewrite H0. 
+(*       rewrite signed2unsigned_of_not_0_is_not_0. *)
 ------ reflexivity.
------- apply H0.
+(* ------ apply H0.
 ------ left. split. reflexivity.
 simpl. split. apply load_8_from_adress_loads_1_byte with 
 pointer (mem1 ++
@@ -779,7 +745,7 @@ destruct load_byte with pointer
    :: str_middle ++ (pointer + l, str_end) :: mem2)).
 -------- reflexivity.
 -------- apply H4.
-------- discriminate.
+------- discriminate. *)
 ---- apply E_Seq with ([],
 (v3, i32 var_3)
 :: (v2, i32 var_2)
@@ -1003,7 +969,7 @@ mem1 ++
 [(pointer, str_start)] ++
 str_middle ++ [(pointer + l, str_end)] ++ mem2)).
 -- apply E_local_get. auto.
--- apply E_Seq with ([i32 (signed2unsigned (load_8_from_adress pointer (mem1 ++ [(pointer, str_start)] ++ str_middle ++ [(pointer + l, str_end)] ++ mem2)) 1)],
+-- apply E_Seq with ([i32 ((* signed2unsigned *) (load_8_from_adress pointer (mem1 ++ [(pointer, str_start)] ++ str_middle ++ [(pointer + l, str_end)] ++ mem2)) (* 1 *))],
 (v3, i32 var_3)
 :: (v2, i32 var_2)
    :: (v1, i32 pointer) :: (v0, i32 pointer) :: loc_list,
@@ -1036,9 +1002,11 @@ str_middle ++ [(pointer + l, str_end)] ++ mem2)).
 ----- unfold execute_i32_eqz. unfold execute_instruction.
       unfold execute_i32_eqz. unfold execute_i32_eqz'.
       unfold get_execution_stack.
-      rewrite signed2unsigned_of_not_0_is_not_0.
+      simpl. simpl in H1. rewrite H1. 
+
+(*       rewrite signed2unsigned_of_not_0_is_not_0. *)
 ------ reflexivity.
------- apply H1.
+(* ------ apply H1.
 ------ left. split. reflexivity.
 simpl. split. apply load_8_from_adress_loads_1_byte with 
 pointer (mem1 ++
@@ -1058,7 +1026,7 @@ destruct load_byte with pointer
    :: str_middle ++ (pointer + l, str_end) :: mem2)).
 -------- reflexivity.
 -------- apply H3.
-------- discriminate.
+------- discriminate. *)
 ---- apply E_Seq with ([],
 (v3, i32 var_3)
 :: (v2, i32 var_2)
@@ -1166,6 +1134,8 @@ apply E_Br_IfTrue.
   rewrite H2. reflexivity.
 ** reflexivity.
 Qed.
+
+(** Demonstrarea invariantului pentru a doua structura repetitiva *)
 
 Lemma strlen_loop2_invariant_Continue :
 forall
@@ -1486,9 +1456,9 @@ rewrite H2 in H0. inversion H0.
 Qed.
 
 
-(*Lemma strlen_loop2_invariant :
+Lemma strlen_loop2_invariant :
 forall
-(pointer l str_start str_end : Z)
+(pointer n l str_start str_end : Z)
 (loc_list glob_list : VariableList)
 (func_list1 func_list2 : FunctionList)
 (memsize : Z)
@@ -1496,9 +1466,10 @@ forall
 (var_2 var_3 : Z)
 (if_result : bool),
 
-(pointer + 4) < memsize ->
+((pointer+n) + 4) < memsize ->
+0 <= pointer + n + 4 < 4294967296 ->
 ([],
-(v3, i32 var_3) :: (v2, i32 var_2) :: (v1, i32 pointer) :: (v0, i32 pointer) :: loc_list,
+(v3, i32 var_3) :: (v2, i32 var_2) :: (v1, i32 (pointer+n)) :: (v0, i32 (pointer+n)) :: loc_list,
 glob_list,
 func_list1 ++ [(strlen, fun_strlen)] ++ func_list2,
 (memsize, mem1 ++ [(pointer, str_start)] ++ str_middle ++ [(pointer + l, str_end)] ++ mem2))
@@ -1523,30 +1494,34 @@ i32.eqz;
 br_if L2
 ]=> ([],
     (v3, i32
-(four_byte_value_notation pointer l str_start str_end mem1 str_middle mem2))
-    :: (v2, i32 (pointer))
-       :: (v1, i32 (pointer +4)) :: (v0, i32 pointer) :: loc_list,
+(four_byte_value_notation pointer n l str_start str_end mem1 str_middle mem2))
+    :: (v2, i32 (pointer+n))
+       :: (v1, i32 ((pointer+n) +4)) :: (v0, i32 (pointer+n)) :: loc_list,
     glob_list, func_list1 ++ [(strlen, fun_strlen)] ++ func_list2,
     (memsize,
     mem1 ++
     [(pointer, str_start)] ++
     str_middle ++ [(pointer + l, str_end)] ++ mem2)) /
-if (are_all_bytes_not_0_bitwise (four_byte_value_notation pointer l str_start str_end mem1 str_middle mem2))
+if (are_all_bytes_not_0_bitwise (four_byte_value_notation pointer n l str_start str_end mem1 str_middle mem2))
 then (SBr L2) else SContinue.
 Proof.
 intros.
 case_eq (are_all_bytes_not_0_bitwise
-    (four_byte_value_notation pointer l str_start str_end mem1
+    (four_byte_value_notation pointer n l str_start str_end mem1
        str_middle mem2)).
 + intros.
 apply strlen_loop2_invariant_Br.
 ++ apply H.
+++ apply H1.
 ++ apply H0.
 + intros.
 apply strlen_loop2_invariant_Continue.
 ++ apply H.
+++ apply H1.
 ++ apply H0.
-Qed.*)
+Qed.
+
+(** Demonstrarea invariantului pentru a treia structura repetitiva *)
 
 Lemma strlen_loop3_invariant_continue :
 forall
@@ -1582,10 +1557,10 @@ i32.add;
 br_if (L2)
 ]=>([],
 (v3, i32 
-(signed2unsigned (load_8_from_adress (pointer+n+1)
+((* signed2unsigned *) (load_8_from_adress (pointer+n+1)
           (mem1 ++
            (pointer, str_start)
-           :: str_middle ++ [(pointer+l, str_end)] ++ mem2)) 1)
+           :: str_middle ++ [(pointer+l, str_end)] ++ mem2)) (* 1 *))
 ) :: (v2, i32 (pointer+n+1)) :: (v1, i32 (pointer+n+1)) :: (v0, i32 var_0) :: loc_list,
 glob_list,
 func_list1 ++ [(strlen, fun_strlen)] ++ func_list2,
@@ -1605,10 +1580,10 @@ mem1 ++
 str_middle ++ [(pointer+l, str_end)] ++ mem2)).
 - apply E_local_get. auto.
 - apply E_Seq with ([
-i32 (signed2unsigned (load_8_from_adress (pointer + n + 1)
+i32 ((* signed2unsigned *) (load_8_from_adress (pointer + n + 1)
   (mem1 ++
    (pointer, str_start)
-   :: str_middle ++ [(pointer+l, str_end)] ++ mem2)) 1)],
+   :: str_middle ++ [(pointer+l, str_end)] ++ mem2)) (* 1 *))],
 (v3, i32 var_3)
 :: (v2, i32 (pointer + n))
    :: (v1, i32 var_1) :: (v0, i32 var_0) :: loc_list,
@@ -1625,10 +1600,10 @@ str_middle ++ [(pointer+l, str_end)] ++ mem2)).
   unfold "<?". rewrite H. reflexivity.
 * reflexivity.
 -- apply E_Seq with ([],
-(v3, i32 (signed2unsigned (load_8_from_adress (pointer + n + 1)
+(v3, i32 ((* signed2unsigned *) (load_8_from_adress (pointer + n + 1)
   (mem1 ++
    (pointer, str_start)
-   :: str_middle ++ [(pointer+l, str_end)] ++ mem2)) 1))
+   :: str_middle ++ [(pointer+l, str_end)] ++ mem2)) (* 1 *)))
 :: (v2, i32 (pointer + n))
    :: (v1, i32 var_1) :: (v0, i32 var_0) :: loc_list,
 glob_list,
@@ -1639,10 +1614,10 @@ mem1 ++
 str_middle ++ [(pointer+l, str_end)] ++ mem2)).
 --- apply E_local_set. auto. auto.
 --- apply E_Seq with ([i32 (pointer + n)],
-(v3, i32 (signed2unsigned (load_8_from_adress (pointer+n+1)
+(v3, i32 ((* signed2unsigned *) (load_8_from_adress (pointer+n+1)
           (mem1 ++
            (pointer, str_start)
-           :: str_middle ++ [(pointer+l, str_end)] ++ mem2)) 1))
+           :: str_middle ++ [(pointer+l, str_end)] ++ mem2)) (* 1 *)))
 :: (v2, i32 (pointer + n))
    :: (v1, i32 var_1) :: (v0, i32 var_0) :: loc_list,
 glob_list,
@@ -1653,10 +1628,10 @@ mem1 ++
 str_middle ++ [(pointer+l, str_end)] ++ mem2)).
 ---- apply E_local_get. auto.
 ---- apply E_Seq with ([i32 1; i32 (pointer + n)],
-(v3, i32 (signed2unsigned (load_8_from_adress (pointer+n+1)
+(v3, i32 ((* signed2unsigned *) (load_8_from_adress (pointer+n+1)
           (mem1 ++
            (pointer, str_start)
-           :: str_middle ++ [(pointer+l, str_end)] ++ mem2)) 1))
+           :: str_middle ++ [(pointer+l, str_end)] ++ mem2)) (* 1 *)))
 :: (v2, i32 (pointer + n))
    :: (v1, i32 var_1) :: (v0, i32 var_0) :: loc_list,
 glob_list,
@@ -1667,10 +1642,10 @@ mem1 ++
 str_middle ++ [(pointer+l, str_end)] ++ mem2)).
 ----- apply E_i32_const.
 ----- apply E_Seq with ([i32 (pointer + n + 1)],
-(v3, i32 (signed2unsigned (load_8_from_adress (pointer+n+1)
+(v3, i32 ((* signed2unsigned *) (load_8_from_adress (pointer+n+1)
           (mem1 ++
            (pointer, str_start)
-           :: str_middle ++ [(pointer+l, str_end)] ++ mem2)) 1))
+           :: str_middle ++ [(pointer+l, str_end)] ++ mem2)) (* 1 *)))
 :: (v2, i32 (pointer + n))
    :: (v1, i32 var_1) :: (v0, i32 var_0) :: loc_list,
 glob_list,
@@ -1690,10 +1665,10 @@ str_middle ++ [(pointer+l, str_end)] ++ mem2)).
 ** reflexivity.
 ** apply H1.
 ------ apply E_Seq with ([i32 (pointer + n + 1)],
-(v3, i32 (signed2unsigned (load_8_from_adress (pointer+n+1)
+(v3, i32 ((* signed2unsigned *) (load_8_from_adress (pointer+n+1)
           (mem1 ++
            (pointer, str_start)
-           :: str_middle ++ [(pointer+l, str_end)] ++ mem2)) 1))
+           :: str_middle ++ [(pointer+l, str_end)] ++ mem2)) (* 1 *)))
 :: (v2, i32 (pointer + n))
    :: (v1, i32 (pointer + n + 1)) :: (v0, i32 var_0) :: loc_list,
 glob_list,
@@ -1704,10 +1679,10 @@ mem1 ++
 str_middle ++ [(pointer+l, str_end)] ++ mem2)).
 ------- apply E_local_tee. auto. auto.
 ------- apply E_Seq with ([],
-(v3, i32 (signed2unsigned (load_8_from_adress (pointer+n+1)
+(v3, i32 ((* signed2unsigned *) (load_8_from_adress (pointer+n+1)
           (mem1 ++
            (pointer, str_start)
-           :: str_middle ++ [(pointer+l, str_end)] ++ mem2)) 1))
+           :: str_middle ++ [(pointer+l, str_end)] ++ mem2)) (* 1 *)))
 :: (v2, i32 (pointer + n + 1))
    :: (v1, i32 (pointer + n + 1)) :: (v0, i32 var_0) :: loc_list,
 glob_list,
@@ -1718,14 +1693,14 @@ mem1 ++
 str_middle ++ [(pointer+l, str_end)] ++ mem2)).
 -------- apply E_local_set. auto. auto.
 -------- apply E_Seq with ([
-i32 (signed2unsigned (load_8_from_adress (pointer+n+1)
+i32 ((* signed2unsigned *) (load_8_from_adress (pointer+n+1)
           (mem1 ++
            (pointer, str_start)
-           :: str_middle ++ [(pointer+l, str_end)] ++ mem2)) 1)],
-(v3, i32 (signed2unsigned (load_8_from_adress (pointer+n+1)
+           :: str_middle ++ [(pointer+l, str_end)] ++ mem2)) (* 1 *))],
+(v3, i32 ((* signed2unsigned *) (load_8_from_adress (pointer+n+1)
           (mem1 ++
            (pointer, str_start)
-           :: str_middle ++ [(pointer+l, str_end)] ++ mem2)) 1))
+           :: str_middle ++ [(pointer+l, str_end)] ++ mem2)) (* 1 *)))
 :: (v2, i32 (pointer + n + 1))
    :: (v1, i32 (pointer + n + 1)) :: (v0, i32 var_0) :: loc_list,
 glob_list,
@@ -1777,10 +1752,10 @@ i32.add;
 br_if (L2)
 ]=>([],
 (v3, i32 
-(signed2unsigned (load_8_from_adress (pointer+n+1)
+((* signed2unsigned  *)(load_8_from_adress (pointer+n+1)
           (mem1 ++
            (pointer, str_start)
-           :: str_middle ++ [(pointer+l, str_end)] ++ mem2)) 1)
+           :: str_middle ++ [(pointer+l, str_end)] ++ mem2)) (* 1 *))
 ) :: (v2, i32 (pointer+n+1)) :: (v1, i32 (pointer+n+1)) :: (v0, i32 var_0) :: loc_list,
 glob_list,
 func_list1 ++ [(strlen, fun_strlen)] ++ func_list2,
@@ -1801,10 +1776,10 @@ mem1 ++
 str_middle ++ [(pointer+l, str_end)] ++ mem2)).
 - apply E_local_get. auto.
 - apply E_Seq with ([
-i32 (signed2unsigned (load_8_from_adress (pointer + n + 1)
+i32 ((* signed2unsigned *) (load_8_from_adress (pointer + n + 1)
   (mem1 ++
    (pointer, str_start)
-   :: str_middle ++ [(pointer+l, str_end)] ++ mem2)) 1)],
+   :: str_middle ++ [(pointer+l, str_end)] ++ mem2)) (* 1 *))],
 (v3, i32 var_3)
 :: (v2, i32 (pointer + n))
    :: (v1, i32 var_1) :: (v0, i32 var_0) :: loc_list,
@@ -1821,10 +1796,10 @@ str_middle ++ [(pointer+l, str_end)] ++ mem2)).
   unfold "<?". rewrite H. reflexivity.
 * reflexivity.
 -- apply E_Seq with ([],
-(v3, i32 (signed2unsigned (load_8_from_adress (pointer + n + 1)
+(v3, i32 ((* signed2unsigned *) (load_8_from_adress (pointer + n + 1)
   (mem1 ++
    (pointer, str_start)
-   :: str_middle ++ [(pointer+l, str_end)] ++ mem2)) 1))
+   :: str_middle ++ [(pointer+l, str_end)] ++ mem2)) (* 1 *)))
 :: (v2, i32 (pointer + n))
    :: (v1, i32 var_1) :: (v0, i32 var_0) :: loc_list,
 glob_list,
@@ -1835,10 +1810,10 @@ mem1 ++
 str_middle ++ [(pointer+l, str_end)] ++ mem2)).
 --- apply E_local_set. auto. auto.
 --- apply E_Seq with ([i32 (pointer + n)],
-(v3, i32 (signed2unsigned (load_8_from_adress (pointer+n+1)
+(v3, i32 ((* signed2unsigned *) (load_8_from_adress (pointer+n+1)
           (mem1 ++
            (pointer, str_start)
-           :: str_middle ++ [(pointer+l, str_end)] ++ mem2)) 1))
+           :: str_middle ++ [(pointer+l, str_end)] ++ mem2)) (* 1 *)))
 :: (v2, i32 (pointer + n))
    :: (v1, i32 var_1) :: (v0, i32 var_0) :: loc_list,
 glob_list,
@@ -1849,10 +1824,10 @@ mem1 ++
 str_middle ++ [(pointer+l, str_end)] ++ mem2)).
 ---- apply E_local_get. auto.
 ---- apply E_Seq with ([i32 1; i32 (pointer + n)],
-(v3, i32 (signed2unsigned (load_8_from_adress (pointer+n+1)
+(v3, i32 ((* signed2unsigned *) (load_8_from_adress (pointer+n+1)
           (mem1 ++
            (pointer, str_start)
-           :: str_middle ++ [(pointer+l, str_end)] ++ mem2)) 1))
+           :: str_middle ++ [(pointer+l, str_end)] ++ mem2)) (* 1 *)))
 :: (v2, i32 (pointer + n))
    :: (v1, i32 var_1) :: (v0, i32 var_0) :: loc_list,
 glob_list,
@@ -1863,10 +1838,10 @@ mem1 ++
 str_middle ++ [(pointer+l, str_end)] ++ mem2)).
 ----- apply E_i32_const.
 ----- apply E_Seq with ([i32 (pointer + n + 1)],
-(v3, i32 (signed2unsigned (load_8_from_adress (pointer+n+1)
+(v3, i32 ((* signed2unsigned *) (load_8_from_adress (pointer+n+1)
           (mem1 ++
            (pointer, str_start)
-           :: str_middle ++ [(pointer+l, str_end)] ++ mem2)) 1))
+           :: str_middle ++ [(pointer+l, str_end)] ++ mem2)) (* 1 *)))
 :: (v2, i32 (pointer + n))
    :: (v1, i32 var_1) :: (v0, i32 var_0) :: loc_list,
 glob_list,
@@ -1887,10 +1862,10 @@ str_middle ++ [(pointer+l, str_end)] ++ mem2)).
 ** apply H1.
 
 ------ apply E_Seq with ([i32 (pointer + n + 1)],
-(v3, i32 (signed2unsigned (load_8_from_adress (pointer+n+1)
+(v3, i32 ((* signed2unsigned *) (load_8_from_adress (pointer+n+1)
           (mem1 ++
            (pointer, str_start)
-           :: str_middle ++ [(pointer+l, str_end)] ++ mem2)) 1))
+           :: str_middle ++ [(pointer+l, str_end)] ++ mem2)) (* 1 *)))
 :: (v2, i32 (pointer + n))
    :: (v1, i32 (pointer + n + 1)) :: (v0, i32 var_0) :: loc_list,
 glob_list,
@@ -1901,10 +1876,10 @@ mem1 ++
 str_middle ++ [(pointer+l, str_end)] ++ mem2)).
 ------- apply E_local_tee. auto. auto.
 ------- apply E_Seq with ([],
-(v3, i32 (signed2unsigned (load_8_from_adress (pointer+n+1)
+(v3, i32 ((* signed2unsigned *) (load_8_from_adress (pointer+n+1)
           (mem1 ++
            (pointer, str_start)
-           :: str_middle ++ [(pointer+l, str_end)] ++ mem2)) 1))
+           :: str_middle ++ [(pointer+l, str_end)] ++ mem2)) (* 1 *)))
 :: (v2, i32 (pointer + n + 1))
    :: (v1, i32 (pointer + n + 1)) :: (v0, i32 var_0) :: loc_list,
 glob_list,
@@ -1915,14 +1890,14 @@ mem1 ++
 str_middle ++ [(pointer+l, str_end)] ++ mem2)).
 -------- apply E_local_set. auto. auto.
 -------- apply E_Seq with ([
-i32 (signed2unsigned (load_8_from_adress (pointer+n+1)
+i32 ((* signed2unsigned *) (load_8_from_adress (pointer+n+1)
           (mem1 ++
            (pointer, str_start)
-           :: str_middle ++ [(pointer+l, str_end)] ++ mem2)) 1)],
-(v3, i32 (signed2unsigned (load_8_from_adress (pointer+n+1)
+           :: str_middle ++ [(pointer+l, str_end)] ++ mem2)) (* 1 *))],
+(v3, i32 ((* signed2unsigned *) (load_8_from_adress (pointer+n+1)
           (mem1 ++
            (pointer, str_start)
-           :: str_middle ++ [(pointer+l, str_end)] ++ mem2)) 1))
+           :: str_middle ++ [(pointer+l, str_end)] ++ mem2)) (* 1 *)))
 :: (v2, i32 (pointer + n + 1))
    :: (v1, i32 (pointer + n + 1)) :: (v0, i32 var_0) :: loc_list,
 glob_list,
@@ -1956,9 +1931,11 @@ str_middle ++ [(pointer+l, str_end)] ++ mem2)).
   reflexivity.
 + intros. rewrite H0. rewrite H2. apply E_Br_IfTrue.
   unfold State2Bool. simpl.
-  rewrite signed2unsigned_of_not_0_is_not_0.
+  simpl. simpl in H2. rewrite H2. 
+(*   rewrite signed2unsigned_of_not_0_is_not_0. *)
 * reflexivity.
-* apply H2.
+* auto.
+(* * apply H2.
 * left. split.
 ** reflexivity.
 ** split.
@@ -1987,8 +1964,10 @@ discriminate.
 reflexivity.*)
 * unfold remove_execution_stack_head.
   simpl.
-  reflexivity.
+  reflexivity. *)
 Qed.
+
+(** Demonstrarea functionarii apelului strlen pe un sir gol *)
 
 Lemma strlen_works_on_empty_string :
 forall (pointer l str_start str_end : Z)
@@ -1998,9 +1977,9 @@ forall (pointer l str_start str_end : Z)
 (len_res : Z),
 
 len_res = (len pointer (mem1 ++ [(pointer, str_start)] ++ str_middle ++ [(pointer + l, str_end)] ++ mem2) memsize) ->
-pointer < memsize ->
+(* pointer < memsize -> *)
 get_function_by_name strlen ([i32 pointer], loc_list, glob_list, (func_list1 ++ [(strlen ,fun_strlen)] ++ func_list2), (memsize, (mem1 ++ [(pointer, str_start)] ++ str_middle ++ [(pointer + l, str_end)] ++ mem2)) ) = fun_strlen ->
-pointer +4 < memsize ->
+pointer + 4 < memsize ->
 (( load_8_from_adress pointer (mem1 ++ [(pointer, str_start)] ++ str_middle ++ [(pointer + l, str_end)] ++ mem2) =? 0) = true ) ->
 0 <= pointer + 4 < 4294967296 ->
 
@@ -2016,20 +1995,17 @@ intros memsize.
 intros mem1 str_middle mem2.
 intros len_res.
 intros len_res_val.
-intros str_can_load.
+(* intros str_can_load. *)
 intros fun_strlen_exists.
 intros can_load_i32.
 intros str_end_is_zero.
 intros pointer_limits.
-(*
-Nu mai e nevoie de asta fiindca acum tratez doar casul in care stringul e 0
-case_eq ( load_8_from_adress pointer (mem1 ++ [(pointer, str_start)] ++ str_middle ++ [(pointer + l, str_end)] ++ mem2) ?= 0).*)
 
 + (*cazul load_8_from_adress = 0*)
   case_eq ((Z.land pointer 3) =? 0).
-(*programul fsce and cu 3 ca sa verifice ca
+(*programul face and cu 3 ca sa verifice ca
 numarul e multiplu de 4 si sa poata face
-eficient load de 4 biti odata (in asm)*)
+eficient load de 4 biti odata (in asm) *)
 
 (* Demonstratia ca Strlen = 0 DACA
 load_8_from_adress = 0 si
@@ -2270,10 +2246,20 @@ apply E_Call with ([], ((v0, i32 pointer) :: loc_list), glob_list, (func_list1 +
 +++++++++ apply E_i32_Load8_u.
           unfold execute_instruction.
           unfold execute_i32_load8_u. simpl.
-          unfold "<?". unfold "<" in pointer_land_3. rewrite str_can_load.
-          unfold signed2unsigned. unfold "<?". apply Z.eqb_eq in str_end_is_zero. simpl. simpl in str_end_is_zero. rewrite str_end_is_zero.
-++++++++++ reflexivity.
-++++++++++ reflexivity.
+          unfold "<?". unfold "<" in pointer_land_3.
+assert (pointer < memsize).
+* apply Z.lt_trans with (pointer+4).
+replace pointer with (pointer+0).
+** rewrite Zplus_assoc_reverse. simpl.
+apply Z.add_lt_mono_l. reflexivity.
+** apply Z.add_0_r.
+** apply can_load_i32.
+* rewrite H.
+unfold signed2unsigned. unfold "<?". apply Z.eqb_eq in str_end_is_zero. simpl. simpl in str_end_is_zero. rewrite str_end_is_zero.
+reflexivity.
+* auto.
+(* ++++++++++ reflexivity.
+++++++++++ reflexivity. *)
 +++++++++ apply E_Seq with (([i32 1], (v3, i32 0) :: (v2, i32 0) :: (v1, i32 pointer) :: (v0, i32 pointer) :: loc_list, glob_list, func_list1 ++ (strlen, fun_strlen) :: func_list2, (memsize, (mem1 ++ [(pointer, str_start)] ++ str_middle ++ [(pointer + l, str_end)] ++ mem2)))).
 ++++++++++ apply E_i32_eqz.
 +++++++++++ reflexivity.
@@ -2296,16 +2282,10 @@ apply E_Call with ([], ((v0, i32 pointer) :: loc_list), glob_list, (func_list1 +
 ++++++ apply Z.eqb_eq in str_end_is_zero. rewrite str_end_is_zero. reflexivity.
 Qed.
 
-(*
-+ (*cazul load_8_from_adress < 0*) intros.
-unfold len. unfold len'.
-simpl. simpl in H3.
 
-Eval compute in (len pointer (mem1 ++ [(pointer, str_start)] ++ str_middle ++ [(pointer + l, str_end)] ++ mem2)).
 
-(*apply TEMPORARELY_ADMITTED.*)
-Admitted.
-*)
+
+(** Demonstrarea (incompleta a) functionarii apelului strlen pe cazul general *)
 
 Lemma strlen_works_on_non_empty_string :
 forall (pointer l str_start str_end : Z)
@@ -2375,11 +2355,11 @@ induction str_middle.
 - intros pointer_and_3.
 exists (pointer+1).
 exists (pointer+1).
-exists (signed2unsigned
+exists ((* signed2unsigned *)
      (load_8_from_adress (pointer + 1)
         (mem1 ++
          (pointer, str_start) :: (pointer + l, str_end) :: mem2))
-     1).
+     (* 1 *)).
 (* Partea in care se creeaza variabilele locale *)
 apply E_Call with ([], ((v0, i32 pointer) :: loc_list), glob_list, (func_list1 ++ [(strlen ,fun_strlen)] ++ func_list2), (memsize, (mem1 ++ [(pointer, str_start)] ++ [] ++ [(pointer + l, str_end)] ++ mem2)) ) SContinue.
 * unfold set_function_params. rewrite fun_strlen_exists. simpl. reflexivity.
@@ -2397,10 +2377,10 @@ apply E_Call with ([], ((v0, i32 pointer) :: loc_list), glob_list, (func_list1 +
 ******* (* Partea in care se executa functia efectiva *)
 apply E_Seq with ([],
 (v3, i32 
-(signed2unsigned (load_8_from_adress (pointer+0+1)
+((* signed2unsigned *) (load_8_from_adress (pointer+0+1)
           (mem1 ++
            (pointer, str_start)
-           :: [] ++ [(pointer+l, str_end)] ++ mem2)) 1)
+           :: [] ++ [(pointer+l, str_end)] ++ mem2)) (* 1 *))
 ) :: (v2, i32 (pointer+0+1)) :: (v1, i32 (pointer+0+1)) :: (v0, i32 pointer) :: loc_list,
 glob_list,
 func_list1 ++ [(strlen, fun_strlen)] ++ func_list2,
@@ -2648,10 +2628,10 @@ rewrite Zorder.Zplus_lt_compat_l with 1 4 pointer.
 
 -- apply E_Seq with ([i32 (pointer+1)],
 (v3, i32 
-(signed2unsigned (load_8_from_adress (pointer+1)
+((* signed2unsigned *) (load_8_from_adress (pointer+1)
           (mem1 ++
            (pointer, str_start)
-           :: [] ++ [(pointer+l, str_end)] ++ mem2)) 1)
+           :: [] ++ [(pointer+l, str_end)] ++ mem2)) (* 1 *))
 ) :: (v2, i32 (pointer+1)) :: (v1, i32 (pointer+0+1)) :: (v0, i32 pointer) :: loc_list,
 glob_list,
 func_list1 ++ [(strlen, fun_strlen)] ++ func_list2,
@@ -2659,10 +2639,10 @@ func_list1 ++ [(strlen, fun_strlen)] ++ func_list2,
 --- rewrite Z.add_0_r. apply E_local_get. auto.
 --- apply E_Seq with ([i32 pointer; i32 (pointer+1)],
 (v3, i32 
-(signed2unsigned (load_8_from_adress (pointer+1)
+((* signed2unsigned *) (load_8_from_adress (pointer+1)
           (mem1 ++
            (pointer, str_start)
-           :: [] ++ [(pointer+l, str_end)] ++ mem2)) 1)
+           :: [] ++ [(pointer+l, str_end)] ++ mem2)) (* 1 *))
 ) :: (v2, i32 (pointer+1)) :: (v1, i32 (pointer+0+1)) :: (v0, i32 pointer) :: loc_list,
 glob_list,
 func_list1 ++ [(strlen, fun_strlen)] ++ func_list2,
@@ -3096,7 +3076,8 @@ Admitted.
 
 (* <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*)
 
-
+Close Scope string_scope.
+Close Scope Z.
 
 (*
 exists (pointer+1).
@@ -3193,31 +3174,3 @@ mem1 ++
 [(pointer, str_start)] ++
 [] ++ [(pointer + l, str_end)] ++ mem2)).
 *)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Close Scope string_scope.
-Close Scope Z.

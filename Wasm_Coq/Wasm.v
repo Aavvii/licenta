@@ -1,39 +1,23 @@
-(*
-Require Import String.
-Require Import List.
-Require Import Bool.
-Import ListNotations.
-*)
-
 Set Warnings "-notation-overridden,-parsing".
 From Coq Require Import Bool.Bool.
 From Coq Require Import Init.Nat.
-(*From Coq Require Import Arith.Arith.*)
 From Coq Require Import Arith.EqNat.
-(*From Coq Require Import Lia.*)
 From Coq Require Import Lists.List.
 From Coq Require Import Strings.String.
 From Coq Require Import ZArith.Znat.
 From Coq Require Import ZArith.BinInt.
-(*From Coq Require Import ZArith.Zbool.*)
-(*From Coq Require Import Reals.RIneq.*)
 Import N2Z.
 Import ListNotations.
-(*Open Scope R_scope.*)
 
-From LF Require Import Maps.
+(*From LF Require Import Maps.*)
 
-(*Definition Var := string.*)
-
-(* pentru inceput o sa definesc doar pentru integer *)
-
+(** Definirea tipurilor de date din Wasm *)
 Inductive WasmType :=
  | i32 : Z -> WasmType
  | i64 : Z -> WasmType
  | None.
 
-(* pentru inceput o sa definesc doar pentru operatiile cele mai simple *)
-
+(** Definirea intructiunilor ce vor fi rulate in mod direct in Coq *)
 Inductive exp : Type :=
 | local_decl (name : string) (type : string)
 | memory_decl (min max : Z)
@@ -67,11 +51,13 @@ Inductive exp : Type :=
 | i64_ge_s
 .
 
+(** Definirea unui tip aditional de date, util apelurilor de functii *)
 Inductive WasmDecl :=
  | param : (list string) -> WasmDecl
  | result   : (string) -> WasmDecl
 .
 
+(** Definirea instructiunilor pe care se vor putea aplica regulile de inferenta *)
 Inductive com : Type :=
   | CNop
   | CSeq (c1 c2 : com)
@@ -114,13 +100,20 @@ Inductive com : Type :=
   | CBlock (label : string) (c : com)
 .
 
+(* Un exemplu simplu ca structura de mai sus functioneaza *)
 Eval compute in CLoop "a" (Ci32_const 5).
 
+(** Tip de date cu scopul de a ajuta la implemenatarea instructiunilor:
+  - return
+  - br_if
+  - loop
+  - block *)
 Inductive Branch : Type :=
   | SContinue
   | SBr (l : string)
   | SReturn.
 
+(** Definirea starii programului *)
 Definition ExecutionStack := list WasmType.
 Definition VariableTuple  := (string * WasmType)%type.
 Definition VariableList   := (list VariableTuple)%type.
@@ -138,7 +131,7 @@ Memory
 )%type.
 
 
-(* --- Functii ajutatoare --- *)
+(** Functii ajutatoare *)
 
 Definition get_variable_name (var : VariableTuple) : (string) :=
  match var with
@@ -198,7 +191,7 @@ Definition get_memory_byte (mem : MemoryByte) : Z :=
  | ( index, byte ) => byte
  end.
 
-(* Functia asta parea utila dar nu o folosesc pana la urma *)
+(* Functia asta este utila dar nu necesara *)
 Definition make_state (execution_stack : ExecutionStack)
                       (local_variable_list : VariableList)
                       (global_variable_list : VariableList)
@@ -350,12 +343,9 @@ match memory_list with
 end.
 Close Scope Z.
 
-(**  Sfarsitul partii cu functii ajutatoare **)
+(** Impelemntari ale functionalitatilor instructiunilor *)
 
-
-(** Impelemntari are functionalitatilor instructiunilor *)
-
-(* i32 CONST *)
+(** i32.const *)
 Definition execute_i32_const (n : Z) (state : State) : State :=
 let exec_stack := get_execution_stack state in
 let loc_list := get_local_var_list state in
@@ -364,7 +354,7 @@ let func_list := get_func_list state in
 let memory_list := get_memory state in
 ( (i32 n) :: exec_stack, loc_list, glob_list, func_list, memory_list).
 
-(* i64 CONST *)
+(** i64.const *)
 Definition execute_i64_const (n : Z) (state : State) : State :=
 let exec_stack := get_execution_stack state in
 let loc_list := get_local_var_list state in
@@ -373,7 +363,7 @@ let func_list := get_func_list state in
 let memory_list := get_memory state in
 ( (i64 n) :: exec_stack, loc_list, glob_list, func_list, memory_list).
 
-(* LOCAL.GET *)
+(** local.get *)
 Definition execute_local_get (variable : string) (state : State) : State :=
 let exec_stack := get_execution_stack state in
 let loc_list := get_local_var_list state in
@@ -382,7 +372,7 @@ let func_list := get_func_list state in
 let memory_list := get_memory state in
 ((( get_variable_from_stack variable loc_list ) :: exec_stack), loc_list, glob_list, func_list, memory_list ).
 
-(* LOCAL.SET *)
+(** local.set *)
 Fixpoint execute_local_set' (variable_name  : string)
                             (variable_new_value : WasmType)
                             (variable_list : VariableList)
@@ -412,7 +402,7 @@ let loc_list := get_local_var_list state in
 match_wasm_types (get_execution_stack_head exec_stack) (get_variable_from_stack variable loc_list).
 
 
-(* i32 PLUS *)
+(** i32.add *)
 Open Scope Z.
 Definition execute_i32_add' (exec_stack : ExecutionStack) : ExecutionStack :=
 match exec_stack with
@@ -428,7 +418,7 @@ let func_list := get_func_list state in
 let memory_list := get_memory state in
 (execute_i32_add' exec_stack, loc_list, glob_list, func_list , memory_list ).
 
-(* i64 PLUS *)
+(** i64.add *)
 Open Scope Z.
 Definition execute_i64_add' (exec_stack : ExecutionStack) : ExecutionStack :=
 match exec_stack with
@@ -444,7 +434,7 @@ let func_list := get_func_list state in
 let memory_list := get_memory state in
 (execute_i64_add' exec_stack, loc_list, glob_list, func_list, memory_list).
 
-(* i32 MINUS *)
+(** i32.sub *)
 Open Scope Z.
 Definition execute_i32_sub' (exec_stack : ExecutionStack) : ExecutionStack :=
 match exec_stack with
@@ -461,7 +451,7 @@ let memory_list := get_memory state in
 (execute_i32_sub' exec_stack, loc_list, glob_list, func_list , memory_list ).
 
 
-(* i64 MINUS *)
+(** i64.sub *)
 Open Scope Z.
 Definition execute_i64_sub' (exec_stack : ExecutionStack) : ExecutionStack :=
 match exec_stack with
@@ -478,7 +468,7 @@ let memory_list := get_memory state in
 (execute_i64_sub' exec_stack, loc_list, glob_list, func_list, memory_list).
 
 
-(* i32 MUL *)
+(** i32.mul *)
 Open Scope Z.
 Definition execute_i32_mul' (exec_stack : ExecutionStack) : ExecutionStack :=
 match exec_stack with
@@ -494,7 +484,7 @@ let func_list := get_func_list state in
 let memory_list := get_memory state in
 (execute_i32_mul' exec_stack, loc_list, glob_list, func_list, memory_list ).
 
-(* i64 MUL *)
+(** i64.mul *)
 Open Scope Z.
 Definition execute_i64_mul' (exec_stack : ExecutionStack) : ExecutionStack :=
 match exec_stack with
@@ -510,7 +500,7 @@ let func_list := get_func_list state in
 let memory_list := get_memory state in
 (execute_i64_mul' exec_stack, loc_list, glob_list, func_list, memory_list ).
 
-(* i32 DIV_S *)
+(** i32.div_s *)
 Open Scope Z.
 Definition execute_i32_div_s' (exec_stack : ExecutionStack) : ExecutionStack :=
 match exec_stack with
@@ -526,7 +516,7 @@ let func_list := get_func_list state in
 let memory_list := get_memory state in
 (execute_i32_div_s' exec_stack, loc_list, glob_list, func_list, memory_list ).
 
-(* i64 DIV_S *)
+(** i64.div_s *)
 Open Scope Z.
 Definition execute_i64_div_s' (exec_stack : ExecutionStack) : ExecutionStack :=
 match exec_stack with
@@ -542,7 +532,7 @@ let func_list := get_func_list state in
 let memory_list := get_memory state in
 (execute_i64_div_s' exec_stack, loc_list, glob_list, func_list, memory_list ).
 
-(* i32 REM_S *)
+(** i32.rem_s*)
 Open Scope Z.
 Definition execute_i32_rem_s' (exec_stack : ExecutionStack) : ExecutionStack :=
 match exec_stack with
@@ -558,7 +548,7 @@ let func_list := get_func_list state in
 let memory_list := get_memory state in
 (execute_i32_rem_s' exec_stack, loc_list, glob_list, func_list, memory_list ).
 
-(* i32 REM_S *)
+(** i32.rem_s *)
 Open Scope Z.
 Definition execute_i64_rem_s' (exec_stack : ExecutionStack) : ExecutionStack :=
 match exec_stack with
@@ -574,7 +564,7 @@ let func_list := get_func_list state in
 let memory_list := get_memory state in
 (execute_i64_rem_s' exec_stack, loc_list, glob_list, func_list, memory_list ).
 
-(* i32 AND *)
+(** i32.and *)
 Open Scope Z.
 Definition execute_i32_and' (exec_stack : ExecutionStack) : ExecutionStack :=
 match exec_stack with
@@ -590,7 +580,7 @@ let func_list := get_func_list state in
 let memory_list := get_memory state in
 (execute_i32_and' exec_stack, loc_list, glob_list, func_list, memory_list ).
 
-(* i64 AND *)
+(** i64.and *)
 Open Scope Z.
 Definition execute_i64_and' (exec_stack : ExecutionStack) : ExecutionStack :=
 match exec_stack with
@@ -606,7 +596,7 @@ let func_list := get_func_list state in
 let memory_list := get_memory state in
 (execute_i64_and' exec_stack, loc_list, glob_list, func_list, memory_list ).
 
-(* i32 XOR *)
+(** i32.xor *)
 
 Open Scope Z.
 Definition execute_i32_xor' (exec_stack : ExecutionStack) : ExecutionStack :=
@@ -623,7 +613,7 @@ let func_list := get_func_list state in
 let memory_list := get_memory state in
 (execute_i32_xor' exec_stack, loc_list, glob_list, func_list, memory_list ).
 
-(* i64 XOR *)
+(** i64.xor *)
 
 Open Scope Z.
 Definition execute_i64_xor' (exec_stack : ExecutionStack) : ExecutionStack :=
@@ -641,7 +631,7 @@ let memory_list := get_memory state in
 (execute_i64_xor' exec_stack, loc_list, glob_list, func_list, memory_list ).
 
 
-(* i32 EQ *)
+(** i32.eq *)
 Open Scope Z.
 Definition execute_i32_eq' (exec_stack : ExecutionStack) : ExecutionStack :=
 match exec_stack with
@@ -657,7 +647,7 @@ let func_list := get_func_list state in
 let memory_list := get_memory state in
 (execute_i32_eq' exec_stack, loc_list, glob_list, func_list, memory_list ).
 
-(* i64 EQ *)
+(** i64.eq *)
 Open Scope Z.
 Definition execute_i64_eq' (exec_stack : ExecutionStack) : ExecutionStack :=
 match exec_stack with
@@ -673,7 +663,7 @@ let func_list := get_func_list state in
 let memory_list := get_memory state in
 (execute_i64_eq' exec_stack, loc_list, glob_list, func_list, memory_list ).
 
-(* i32 EQZ *)
+(** i32.eqz *)
 Open Scope Z.
 Definition execute_i32_eqz' (exec_stack : ExecutionStack) : ExecutionStack :=
 match exec_stack with
@@ -689,7 +679,7 @@ let func_list := get_func_list state in
 let memory_list := get_memory state in
 (execute_i32_eqz' exec_stack, loc_list, glob_list, func_list, memory_list ).
 
-(* i64 EQZ *)
+(** i64.eqz *)
 Open Scope Z.
 Definition execute_i64_eqz' (exec_stack : ExecutionStack) : ExecutionStack :=
 match exec_stack with
@@ -706,7 +696,7 @@ let memory_list := get_memory state in
 (execute_i64_eqz' exec_stack, loc_list, glob_list, func_list, memory_list ).
 
 
-(* i32 GE_S *)
+(** i32.ge_s*)
 Open Scope Z.
 Definition execute_i32_ge_s' (exec_stack : ExecutionStack) : ExecutionStack :=
 match exec_stack with
@@ -722,7 +712,7 @@ let func_list := get_func_list state in
 let memory_list := get_memory state in
 (execute_i32_ge_s' exec_stack, loc_list, glob_list, func_list, memory_list ).
 
-(* i64 GE_S *)
+(** i64.ge_s *)
 Open Scope Z.
 Definition execute_i64_ge_s' (exec_stack : ExecutionStack) : ExecutionStack :=
 match exec_stack with
@@ -739,7 +729,7 @@ let memory_list := get_memory state in
 (execute_i64_ge_s' exec_stack, loc_list, glob_list, func_list, memory_list ).
 
 
-(* CALL FUNCTION FROM TABLE *)
+(** call - apel de functie *)
 Fixpoint get_function_by_name' (name : string) (func_list : FunctionList) :=
 match func_list with
 | hd :: tl => if string_dec name (get_function_name hd)
@@ -769,7 +759,7 @@ match func with
 | _ => []
 end.
 
-(* SET FUNCTION IN TABLE *)
+(** Declararea unei functii in tabelul de functii *)
 Definition set_function (name : string) (contents : com) (state : State) : State :=
 let exec_stack := get_execution_stack state in
 let loc_list := get_local_var_list state in
@@ -778,8 +768,7 @@ let func_list := get_func_list state in
 let memory_list := get_memory state in
 (exec_stack, loc_list, glob_list, ((name, contents):: func_list), memory_list).
 
-(* MEMORY DECLARATION *)
-
+(** Declarearea memoriei *)
 Open Scope Z.
 Definition execute_memory (max : Z) (state : State) : State :=
 let exec_stack := get_execution_stack state in
@@ -792,8 +781,7 @@ let memory_size := if ((max * 65536) >? (get_memory_size memory)) then (max * 65
 (exec_stack, loc_list, glob_list, func_list, (memory_size, memory_list)).
 Close Scope Z.
 
-(* i32 LOAD 8 NO OFFSET *)
-
+(** i32.load8_u FĂRĂ offset *)
 Open Scope Z.
 Definition execute_i32_load8_u (state : State) : State :=
 let exec_stack := get_execution_stack state in
@@ -806,7 +794,7 @@ then
   let loc_list := get_local_var_list state in
   let glob_list := get_global_var_list state in
   let func_list := get_func_list state in
-  ((i32 (signed2unsigned (load_8_from_adress index memory_list) 1))::(get_execution_stack_tail exec_stack),
+  ((i32 ((* signed2unsigned *) (load_8_from_adress index memory_list) (* 1 *)))::(get_execution_stack_tail exec_stack),
   loc_list,
   glob_list,
   func_list,
@@ -814,8 +802,7 @@ then
 else state.
 Close Scope Z.
 
-(* i32 LOAD 8 WITH OFFSET *)
-
+(** i32.load8_u CU offset *)
 Open Scope Z.
 Definition execute_i32_load8_u_offset (state : State) (offset : Z) : State :=
 let exec_stack := get_execution_stack state in
@@ -828,7 +815,7 @@ then
   let loc_list := get_local_var_list state in
   let glob_list := get_global_var_list state in
   let func_list := get_func_list state in
-  ((i32 (signed2unsigned (load_8_from_adress index memory_list) 1))::(get_execution_stack_tail exec_stack),
+  ((i32 ((* signed2unsigned *) (load_8_from_adress index memory_list) (* 1 *)))::(get_execution_stack_tail exec_stack),
   loc_list,
   glob_list,
   func_list,
@@ -836,7 +823,7 @@ then
 else state.
 Close Scope Z.
 
-(* i32 LOAD*)
+(** i32.load *)
 Open Scope Z.
 Definition execute_i32_load(state : State) : State :=
 let exec_stack := get_execution_stack state in
@@ -864,7 +851,7 @@ then
 else state.
 Close Scope Z.
 
-(* LOCAL DECLARATION *)
+(** Declararea variabilelor locale *)
 Definition execute_local_decl' (loc_list : VariableList) (var_name : string) (var_type : string) : VariableList :=
 if string_is_type var_type then
 (var_name, string2type var_type 0) :: loc_list
@@ -908,9 +895,7 @@ match wasm_list with
 | (None) :: tl => false
 | [] => true
 end.
-Close Scope string_scope.
 
-Open Scope string_scope.
 Definition list_of_nat_string : list string :=
 ["0"; "1"; "2"; "3"; "4"; "5"; "6"; "7"; "8"; "9"; "10"; "11"; "12"; "13"; "14"; "15"; "16"; "17"; "18"; "19"; "20"; "21"; "22"; "23"; "24"; "25"; "26"; "27"; "28"; "29"; "30"; "31"; "32"; "33"; "34"; "35"; "36"; "37"; "38"; "39"; "40"; "41"; "42"; "43"; "44"; "45"; "46"; "47"; "48"; "49"; "50"; "51"; "52"; "53"; "54"; "55"; "56"; "57"; "58"; "59"; "60"; "61"; "62"; "63"; "64"; "65"; "66"; "67"; "68"; "69"; "70"; "71"; "72"; "73"; "74"; "75"; "76"; "77"; "78"; "79"; "80"; "81"; "82"; "83"; "84"; "85"; "86"; "87"; "88"; "89"; "90"; "91"; "92"; "93"; "94"; "95"; "96"; "97"; "98"; "99"].
 Fixpoint get_nth' (l: list string) (index : nat) (goal : nat) : string :=
@@ -960,6 +945,7 @@ if (check_types stack_parameters param_types) then
   memory_list)
 else state.
 
+(** Functia folosita pentru a executa toate intructiunile *)
 Definition execute_instruction (instrunction : exp)
                             (state : State)
                             : (State):=
@@ -1018,7 +1004,7 @@ match intructions with
 | [] => state
 end.
 
-
+(** Definirea notatiilor *)
 
 Declare Custom Entry com.
 Declare Scope com_scope.
@@ -1167,16 +1153,7 @@ Notation " '(;' a ';)' b " :=
             (in custom com at level 88, b at level 99).
 
 
-
-(* Te gandeai ca probabil instructiunile definite mai sus ca Fixpoints ar trebui transormate in relatii
-Nu ar trebui sa fie greu fiindca le creezi si apoi apelezi functiile care se ocupa cu asta.
-Ai mai facut asta deja un alt .v ;
-Aici trebuie sa fie comenzi. Daca CAss e o comanda, in cazul tau, si add ar trebui sa fie o comanda.*)
-
-(*Locate ";".*)
-
-(* urma sa implementez adunarea si restul opeartiilor ca si comenzi *)
-
+(** Implementarea regulilor de inferenta *)
 Reserved Notation "st '=[' c ']=>' st' '/' s"
      (at level 40, c custom com at level 99, st' constr at next level).
 Inductive ceval : com -> State -> Branch -> State -> Prop :=  
@@ -1423,9 +1400,9 @@ where "st =[ c ]=> st' / s " := (ceval c st s st').
 
 (* ----------- Urmeaza implementarea si testarea a noi instructiuni -------------------- *)
 
-Definition var1 : string := "Var1".
+(*Definition var1 : string := "Var1".
 Definition var_a : string := "a".
-Definition var_b : string := "b".
+Definition var_b : string := "b".*)
 Open Scope Z.
 
 

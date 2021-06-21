@@ -43,6 +43,8 @@ Require Import Datatypes Specif.
 Search (N -> uint).
 Search (uint -> Z).*)
 
+(** Definirea inversului unui numar *)
+
 Definition invers'' (n : Decimal.uint) :=
 match n with
  | D0 (n') => D0 
@@ -124,6 +126,9 @@ Definition temp : string := "temp".
 Definition IN : string := "IN".
 Definition label1 : string := "label1".
 
+(** Demonstratia invariantului
+ - Cazul in care avem un numar mai mare sau egal cu 10 *)
+
 Lemma loop_invariant_ge_10 :
 forall (n m_inv m_init : Z) glob_st fun_st (label:string) mem, m_init >= 10 ->
 ([], [(IN, i32 n) ;(inv, i32 m_inv); (temp, i32 m_init)], glob_st, fun_st, mem) =[
@@ -192,6 +197,8 @@ apply positive_ge_10_implies_p_div_10_ge_1. assumption.
 ------------------- reflexivity.
 - intros H0. contradiction.
 Qed.
+
+(** - Cazul in care avem un numar mai mic decat 10 *)
 
 Lemma loop_invariant_lt_10 :
 forall n m_inv m_init m_step glob_st fun_st (label:string) mem,
@@ -267,9 +274,12 @@ Qed.*)
 
 Open Scope positive_scope.
 
+(** - Cazul general *)
+
 Lemma loop_invariant :
 forall n temp_init inv_init glob_st fun_st label mem,
-([], [(IN, i32 n) ;(inv, i32 inv_init); (temp, i32 temp_init)],glob_st, fun_st, mem) =[
+([], [(IN, i32 n) ;(inv, i32 inv_init); (temp, i32 temp_init)],
+    glob_st, fun_st, mem) =[
  Clocal_get inv ;
  Ci32_const 10%Z ;
  Ci32_mul ;
@@ -286,7 +296,8 @@ forall n temp_init inv_init glob_st fun_st label mem,
  Ci32_const 1%Z ;
  Ci32_ge_s ;
  CBr_If label
-]=> ([] , [(IN, i32 n) ;(inv, i32 (Z.modulo ((Z.modulo (inv_init * 10) 4294967296)+(Z.modulo (temp_init) 10) ) 4294967296 )); (temp, i32 (temp_init / 10))], glob_st, fun_st, mem) /
+]=> ([] , [(IN, i32 n) ;(inv, i32 (Z.modulo ((Z.modulo (inv_init * 10) 4294967296)+(Z.modulo (temp_init) 10) ) 4294967296 ));
+    (temp, i32 (temp_init / 10))], glob_st, fun_st, mem) /
 if (temp_init) >=? 10 then SBr label else SContinue.
 Proof.
 intros n temp_init inv_init glob_st fun_st label mem.
@@ -322,29 +333,6 @@ invers (n) = n.
 Proof.
 intros.
 simpl.
-(*case_eq (n ?= 0%Z)%Z.
-- intros. apply Z.compare_eq in H1. rewrite H1. reflexivity.
-- intros. unfold ">=" in H0. contradiction.
-- intros. case_eq (n ?= 1)%Z.
--- intros. apply Z.compare_eq in H2. rewrite H2. reflexivity.
--- intros. Search (_ ?= _ = Gt).
-(*rewrite Z.compare_gt_iff in H1.
-rewrite Z.compare_lt_iff in H2.*)
-rewrite Z.compare_gt_iff in H1.
-rewrite Z.compare_lt_iff in H2.
-case_eq (n =? 0).
-* intros. rewrite Z.eqb_eq in H3. rewrite H3. reflexivity.
-* intros. Search (_ =? _ = false). rewrite Z.eqb_neq in H3.
-
-
-Search ( Z.pred  _ ). apply Z.pred_inj.
-
-+ discriminate.
-+ rewrite Z.compare_lt_iff in H2. assumption.
-+ .
-rewrite Z.lt_succ_l in H1.
-*)
-
 case_eq (n =? 0)%Z.
 - intros.
 rewrite Z.eqb_eq in H1.
@@ -406,40 +394,33 @@ Definition inv_loop_content :=
  Ci32_ge_s ;
  CBr_If label1}>.
 
-(*  *)
+(** Demonstratia (incompleta) pentru functionarea generala a calcularii inversului unui numar *)
 Lemma example_calculeaza_invers_general:
 forall n glob_st fun_st mem,
 ([], [(IN, i32 n) ;(inv, i32 0); (temp, i32 0)],glob_st, fun_st, mem) =[
-Ci32_const 0%Z ;
-Clocal_set inv ;
-Clocal_get IN ;
-Clocal_set temp ;
-(*Clocal_get IN ;
-Ci32_const 9 ;
-Ci32_ge_s ;
-if
- Clocal_get IN ;
- Clocal_set temp ; *)
+i32.const (0%Z) ;
+(local.set inv) ;
+(local.get IN) ;
+(local.set temp) ;
 loop (label1)
- <{Clocal_get inv ;
- Ci32_const 10%Z ;
- Ci32_mul ;
- Clocal_get temp;
- Ci32_const 10%Z ;
- Ci32_rem_s ;
- Ci32_add ;
- Clocal_set inv ;
- Clocal_get temp ;
- Ci32_const 10%Z ;
- Ci32_div_s ;
- Clocal_set temp ;
- Clocal_get temp ;
- Ci32_const 1%Z ;
- Ci32_ge_s ;
- CBr_If label1}>
- (*end*)
-end ;
-Clocal_get inv
+  (local.get inv) ;
+  i32.const 10 ;
+  i32.mul ;
+  (local.get temp) ;
+  i32.const 10 ;
+  i32.rem_s ;
+  i32.add ;
+  (local.set inv) ;
+  (local.get temp) ;
+  i32.const 10 ;
+  i32.div_s ;
+  (local.set temp) ;
+  (local.get temp) ;
+  i32.const 1 ;
+  i32.ge_s ;
+  br_if (label1)
+ end;
+(local.get inv)
 ]=> ([i32 (invers n)] , [(IN, i32 n) ;(inv, i32 (invers n)); (temp, i32 0)],glob_st, fun_st, mem) / SContinue.
 Proof.
 intros n glob_st fun_st mem.
@@ -452,20 +433,23 @@ apply E_local_get. auto.
 apply E_Seq with ([], [(IN, i32 n) ;(inv, i32 0); (temp, i32 n)],glob_st, fun_st, mem).
 apply E_local_set. auto. auto.
 induction n.
-- apply E_Seq with ([] , [(IN, i32 0) ;(inv, i32 (invers 0)); (temp, i32 0)],glob_st, fun_st, mem).
+- apply E_Seq with ([] , [(IN, i32 0) ;(inv, i32 (invers 0)); (temp, i32 0)], glob_st, fun_st, mem).
 -- apply E_LoopOnce. apply loop_invariant.
 -- apply E_local_get. auto.
-- apply E_Seq with ([] , [(IN, i32 (Z.pos p)) ;(inv, i32 (invers (Z.pos p))); (temp, i32 (Z.pos p / 10))],glob_st, fun_st, mem).
+- apply E_Seq with ([] , [(IN, i32 (Z.pos p)) ;(inv, i32 (invers (Z.pos p))); (temp, i32 0)],glob_st, fun_st, mem).
 case_eq (Z.pos p >=? 10).
 + intros.
 apply E_Loop with ([] , [(IN, i32 (Z.pos p)) ;(inv, i32 ((invers (Z.pos p)) / 10)); (temp, i32 (Z.modulo (Z.pos p) 10) )],glob_st, fun_st, mem) label1.
 ++ induction p.
 Search (Z -> uint).
 +++ rewrite Pos2Z.pos_xI.
-++++ apply loop_invariant_ge_10.
 
+Admitted.
 
+Close Scope com_scope.
+Close Scope Z.
 
+(*
 
  case_eq(Z.pos p <? 10)%Z.
 + intros. apply E_LoopOnce.
@@ -477,6 +461,7 @@ assert ((Z.pos p > 0)%Z).
 ++++ unfold Z.ltb in H0. rewrite H1 in H0. inversion H0.
 +++ intros. rewrite invers_for_0_10.
 ++++ Admitted.
+*)
 
 (*
 unfold invers. unfold invers'. simpl.
@@ -675,6 +660,3 @@ intros.
 induction m_init.
 - apply loop_invariant_lt_10. reflexivity.
 *)
-
-Close Scope com_scope.
-Close Scope Z.

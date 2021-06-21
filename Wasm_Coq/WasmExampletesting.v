@@ -17,12 +17,15 @@ Import Zabs2N.
 Import ListNotations.
 (*Open Scope R_scope.*)
 
-From LF Require Import Maps Wasm.
+From LF Require Import (* Maps *) Wasm.
 Open Scope com_scope.
 
 (* -------------------- !!! testing only for integers !!! ----------------- *)
 
 (*------------------------- Testing execute functions ----------------------------*)
+
+(** Testarea executiei directe a instructiunilor individuale *)
+
 Open Scope string_scope.
 Definition var_a : string := "a".
 Definition var_b : string := "b".
@@ -77,6 +80,9 @@ Close Scope string_scope.
 
 
 (* ---------------------------- Testing execute_instructions ------------------------- *)
+
+(** Testarea executiei directe a secventelor de instruciuni *)
+
 Open Scope string_scope.
 Eval compute in execute_instruction (i32_const (5)) stacks_example_1.
 
@@ -110,6 +116,8 @@ Close Scope string_scope.
 (* Finisted testing execute_instructions *)
 
 (* ---------------------------- Testing inference rules ------------------------------- *)
+
+(** Testarea aplicarii regulilor de inferenta *)
 
 Open Scope Z.
 (* Versiune cu com-uri pentru:
@@ -159,17 +167,19 @@ apply E_Seq with ([], [(var_a, i32 0); (var_b, (i32 0))], [], [], (0%Z, [])).
 Qed.
 
 Example example_no_if_no_while:
-([], [(var_a, i32 0); (var_b, (i32 0))], [], [], (0%Z, [])) =[
- Ci32_const 5 ;
- Ci32_const 6 ;
- Ci32_add ;
- Clocal_set var_a ;
- Ci32_const 7 ;
- Ci32_const 4 ;
- Ci32_add ;
- Clocal_get var_a ;
- Ci32_eq
-]=> ([i32 1] , [(var_a, i32 11); (var_b, i32 0)], [], [], (0%Z, [])) / SContinue.
+([], [(var_a, i32 0); (var_b, (i32 0))],
+[], [], (0%Z, [])) =[
+ i32.const 5 ;
+ i32.const 6 ;
+ i32.add ;
+ (local.set var_a) ;
+ i32.const 7 ;
+ i32.const 4 ;
+ i32.add ;
+ (local.get var_a) ;
+ i32.eq
+]=> ([i32 1] , [(var_a, i32 11); (var_b, i32 0)],
+[], [], (0%Z, [])) / SContinue.
 Proof.
   apply E_Seq with ([i32 5] , [(var_a, i32 0); (var_b, i32 0)], [], [], (0%Z, [])).
   - apply E_i32_const.
@@ -340,24 +350,26 @@ apply E_Seq with ([] , [(var_a, i32 2); (var_b, i32 0)],[],[], (0%Z, [])).
 - apply E_local_get. auto.
 Qed.
 
-Example example_loop_test_2_times_and_ignore_lines:
-([], [(var_a, i32 0); (var_b, (i32 0))],[],[], (0%Z, [])) =[
+Example example_loop_exactly_2_times:
+([], [(var_a, i32 0); (var_b, (i32 0))],
+    [],[], (0%Z, [])) =[
  loop (label1)
-   Clocal_get var_a;
-   Ci32_const 1;
+   (local.get var_a);
+   i32.const 1;
+   i32.add;
+   (local.set var_a);
+   (local.get var_a);
+   i32.const 1;
+   i32.eq;
+   (br_if label1);
+   i32.const 42;
+   (local.get var_a);
    Ci32_add;
-   Clocal_set var_a;
-   Clocal_get var_a;
-   Ci32_const 1;
-   Ci32_eq;
-   CBr_If label1;
-   Ci32_const 42;
-   Clocal_get var_a;
-   Ci32_add;
-   Clocal_set var_a
+   (local.set var_a)
  end;
- Clocal_get var_a
-]=> ([i32 44] , [(var_a, i32 44); (var_b, i32 0)],[],[], (0%Z, [])) / SContinue.
+ local.get var_a
+]=> ([i32 44] , [(var_a, i32 44); (var_b, i32 0)],
+    [],[], (0%Z, [])) / SContinue.
 Proof.
 apply E_Seq with ([] , [(var_a, i32 44); (var_b, i32 0)],[],[], (0%Z, [])).
 - apply E_Loop with ([] , [(var_a, i32 1); (var_b, i32 0)],[],[], (0%Z, [])) label1.
@@ -528,34 +540,29 @@ Definition IN : string := "IN".
 
 Example example_calculeaza_invers:
 ([], [(IN, i32 123) ;(inv, i32 0); (temp, i32 0)],[],[], (0%Z, [])) =[
-Ci32_const 0 ;
-Clocal_set inv ;
-Clocal_get IN ;
-Ci32_const 1 ;
-Ci32_ge_s ;
-if (L1)
- Clocal_get IN ;
- Clocal_set temp ;
- loop (label1)
-  Clocal_get inv ;
-  Ci32_const 10 ;
-  Ci32_mul ;
-  Clocal_get temp;
-  Ci32_const 10 ;
-  Ci32_rem_s ;
-  Ci32_add ;
-  Clocal_set inv ;
-  Clocal_get temp ;
-  Ci32_const 10 ;
-  Ci32_div_s ;
-  Clocal_set temp ;
-  Clocal_get temp ;
-  Ci32_const 1 ;
-  Ci32_ge_s ;
-  CBr_If label1
- end
-end ;
-Clocal_get inv
+i32.const (0%Z) ;
+(local.set inv) ;
+(local.get IN) ;
+(local.set temp) ;
+loop (label1)
+  (local.get inv) ;
+  i32.const 10 ;
+  i32.mul ;
+  (local.get temp) ;
+  i32.const 10 ;
+  i32.rem_s ;
+  i32.add ;
+  (local.set inv) ;
+  (local.get temp) ;
+  i32.const 10 ;
+  i32.div_s ;
+  (local.set temp) ;
+  (local.get temp) ;
+  i32.const 1 ;
+  i32.ge_s ;
+  br_if (label1)
+ end;
+(local.get inv)
 ]=> ([i32 321] , [(IN, i32 123) ;(inv, i32 321); (temp, i32 0)],[],[], (0%Z, [])) / SContinue.
 Proof.
 apply E_Seq with ([i32 0], [(IN, i32 123) ;(inv, i32 0); (temp, i32 0)],[],[], (0%Z, [])).
@@ -564,9 +571,9 @@ apply E_Seq with ([i32 0], [(IN, i32 123) ;(inv, i32 0); (temp, i32 0)],[],[], (
 -- apply E_local_set. auto. auto.
 -- apply E_Seq with ([i32 123], [(IN, i32 123) ;(inv, i32 0); (temp, i32 0)],[],[], (0%Z, [])).
 --- apply E_local_get. auto.
---- apply E_Seq with ([i32 1; i32 123], [(IN, i32 123) ;(inv, i32 0); (temp, i32 0)],[],[], (0%Z, [])).
----- apply E_i32_const.
----- apply E_Seq with ([i32 1], [(IN, i32 123) ;(inv, i32 0); (temp, i32 0)],[],[], (0%Z, [])).
+--- apply E_Seq with ([], [(IN, i32 123) ;(inv, i32 0); (temp, i32 123)],[],[], (0%Z, [])).
+---- apply E_local_set. auto. auto.
+(* ---- apply E_Seq with ([i32 1], [(IN, i32 123) ;(inv, i32 0); (temp, i32 0)],[],[], (0%Z, [])).
 ----- apply E_i32_ge_s. auto. auto.
 ----- apply E_Seq with ([] , [(IN, i32 123) ;(inv, i32 321); (temp, i32 0)],[],[], (0%Z, [])).
 ------ apply E_IfTrue.
@@ -574,7 +581,8 @@ apply E_Seq with ([i32 0], [(IN, i32 123) ;(inv, i32 0); (temp, i32 0)],[],[], (
 ------- apply E_Seq with ([i32 123], [(IN, i32 123) ;(inv, i32 0); (temp, i32 0)],[],[], (0%Z, [])).
 -------- apply E_local_get.  auto.
 -------- apply E_Seq with ([], [(IN, i32 123) ;(inv, i32 0); (temp, i32 123)],[],[], (0%Z, [])).
---------- apply E_local_set. auto. auto.
+--------- apply E_local_set. auto. auto. *)
+---- apply E_Seq with ([] , [(IN, i32 123) ;(inv, i32 321); (temp, i32 0)],[],[], (0%Z, [])).
 --------- apply E_Loop with ([], [(IN, i32 123) ;(inv, i32 3); (temp, i32 12)],[],[], (0%Z, [])) label1.
 ---------- apply E_Seq with ([i32 0], [(IN, i32 123) ;(inv, i32 0); (temp, i32 123)],[],[], (0%Z, [])).
 ----------- apply E_local_get. auto.
@@ -678,8 +686,9 @@ apply E_Seq with ([i32 0], [(IN, i32 123) ;(inv, i32 0); (temp, i32 0)],[],[], (
 --------------------------- apply E_Br_IfFalse.
 ---------------------------- reflexivity.
 ---------------------------- reflexivity.
-------- discriminate.
------- apply E_local_get.  auto.
+--------- apply E_local_get.  auto.
+(* ------- discriminate.
+------ apply E_local_get.  auto. *)
 Qed.
 
 (*
