@@ -771,14 +771,16 @@ let memory_list := get_memory state in
 (** Declarearea memoriei *)
 Open Scope Z.
 Definition execute_memory (max : Z) (state : State) : State :=
-let exec_stack := get_execution_stack state in
+if (Z.modulo max 65536) =? 0 then
+(let exec_stack := get_execution_stack state in
 let loc_list := get_local_var_list state in
 let glob_list := get_global_var_list state in
 let func_list := get_func_list state in
 let memory := get_memory state in
 let memory_list := get_memory_list memory in
 let memory_size := if ((max * 65536) >? (get_memory_size memory)) then (max * 65536) else (get_memory_size memory) in
-(exec_stack, loc_list, glob_list, func_list, (memory_size, memory_list)).
+(exec_stack, loc_list, glob_list, func_list, (memory_size, memory_list)))
+else state.
 Close Scope Z.
 
 (** i32.load8_u FĂRĂ offset *)

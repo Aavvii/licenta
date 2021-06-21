@@ -839,14 +839,14 @@ Qed.*)
 
 (*Eval compute in execute_instruction (<{memory 1 1}>) ([], [], [], [], (0, [])).*)
 
-Example memory_example :
+(*Example memory_example :
 ([],[],[],[], (0, [])) =[
 (CMemory 1 1)
 ]=>([],[],[],[], ((1024*64), [])) / SContinue.
 Proof.
 apply E_Memory.
 reflexivity.
-Qed.
+Qed.*)
 
 Close Scope com_scope.
 Close Scope Z.

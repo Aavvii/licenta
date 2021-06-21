@@ -1,4 +1,4 @@
-DIGEST 89ee5d812625d07e52fb22d82f2f0c48
+DIGEST 59e213bff73432a4e7e66519e4699afc
 FLF.WasmExampletesting
 R70:78 Coq.Bool.Bool <> <> lib
 R105:112 Coq.Init.Nat <> <> lib
@@ -9546,44 +9546,3 @@ R31208:31208 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' n
 R31206:31207 Coq.Lists.List ListNotations ::list_scope:'['_']' not
 R31146:31154 LF.WasmExampletesting <> func_call def
 R31137:31141 LF.WasmExampletesting <> func2 def
-def 32650:32663 <> memory_example
-R32689:32692 LF.Wasm <> :::x_'=['_x_']=>'_x_'/'_x not
-R32706:32709 LF.Wasm <> :::x_'=['_x_']=>'_x_'/'_x not
-R32740:32742 LF.Wasm <> :::x_'=['_x_']=>'_x_'/'_x not
-R32693:32693 LF.Wasm <> :com:com_scope:'('_x_')' not
-R32705:32705 LF.Wasm <> :com:com_scope:'('_x_')' not
-R32701:32701 LF.Wasm <> :com:com_scope:x_x_'..'_x not
-R32703:32703 LF.Wasm <> :com:com_scope:x_x_'..'_x not
-R32694:32700 LF.Wasm <> CMemory constr
-R32667:32667 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R32670:32670 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R32673:32673 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R32676:32676 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R32679:32680 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R32688:32688 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R32668:32669 Coq.Lists.List ListNotations ::list_scope:'['_']' not
-R32671:32672 Coq.Lists.List ListNotations ::list_scope:'['_']' not
-R32674:32675 Coq.Lists.List ListNotations ::list_scope:'['_']' not
-R32677:32678 Coq.Lists.List ListNotations ::list_scope:'['_']' not
-R32681:32681 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R32683:32684 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R32687:32687 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R32685:32686 Coq.Lists.List ListNotations ::list_scope:'['_']' not
-R32743:32751 LF.Wasm <> SContinue constr
-R32710:32710 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R32713:32713 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R32716:32716 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R32719:32719 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R32722:32723 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R32739:32739 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R32711:32712 Coq.Lists.List ListNotations ::list_scope:'['_']' not
-R32714:32715 Coq.Lists.List ListNotations ::list_scope:'['_']' not
-R32717:32718 Coq.Lists.List ListNotations ::list_scope:'['_']' not
-R32720:32721 Coq.Lists.List ListNotations ::list_scope:'['_']' not
-R32724:32725 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R32733:32735 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R32738:32738 Coq.Init.Datatypes <> ::core_scope:'('_x_','_x_','_'..'_','_x_')' not
-R32730:32730 Coq.ZArith.BinInt <> ::Z_scope:x_'*'_x not
-R32736:32737 Coq.Lists.List ListNotations ::list_scope:'['_']' not
-R32767:32774 LF.Wasm <> E_Memory constr
-R32767:32774 LF.Wasm <> E_Memory constr
