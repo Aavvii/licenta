@@ -1,0 +1,517 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<link href="coqdoc.css" rel="stylesheet" type="text/css" />
+<title>Proprieties</title>
+</head>
+
+<body>
+
+<div id="page">
+
+<div id="header">
+</div>
+
+<div id="main">
+
+<h1 class="libtitle">Library Proprieties</h1>
+
+<div class="code">
+<span class="id" title="keyword">Set</span> <span class="id" title="var">Warnings</span> "-notation-overridden,-parsing".<br/>
+<span class="id" title="keyword">From</span> <span class="id" title="var">Coq</span> <span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">Bool.Bool</span>.<br/>
+<span class="id" title="keyword">From</span> <span class="id" title="var">Coq</span> <span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">Init.Nat</span>.<br/>
+<span class="id" title="keyword">From</span> <span class="id" title="var">Coq</span> <span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">Arith.EqNat</span>.<br/>
+<span class="id" title="keyword">From</span> <span class="id" title="var">Coq</span> <span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">Arith.Plus</span>.<br/>
+<span class="id" title="keyword">From</span> <span class="id" title="var">Coq</span> <span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">Lists.List</span>.<br/>
+<span class="id" title="keyword">From</span> <span class="id" title="var">Coq</span> <span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">Strings.String</span>.<br/>
+<span class="id" title="keyword">From</span> <span class="id" title="var">Coq</span> <span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">ZArith.Znat</span>.<br/>
+<span class="id" title="keyword">From</span> <span class="id" title="var">Coq</span> <span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">ZArith.BinInt</span>.<br/>
+<span class="id" title="keyword">Import</span> <span class="id" title="var">N2Z</span>.<br/>
+<span class="id" title="keyword">Import</span> <span class="id" title="var">ListNotations</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">From</span> <span class="id" title="var">Coq</span> <span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">ZArith</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">From</span> <span class="id" title="var">LF</span> <span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span>  <span class="id" title="var">Wasm</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+Proprietati scurte la care se pot reduce alte proprietati 
+</div>
+<div class="code">
+
+<br/>
+<span class="id" title="keyword">Open</span> <span class="id" title="keyword">Scope</span> <span class="id" title="var">Z</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Lemma</span> <span class="id" title="var">a_plus_b_is_0</span> :<br/>
+<span class="id" title="keyword">forall</span> <span class="id" title="var">n</span> <span class="id" title="var">m</span>,<br/>
+<span class="id" title="var">n</span> = (-<span class="id" title="var">m</span>) -&gt;<br/>
+<span class="id" title="var">n</span> + <span class="id" title="var">m</span> = 0%<span class="id" title="var">Z</span>.<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+<span class="id" title="tactic">intros</span>.<br/>
+<span class="id" title="tactic">rewrite</span> <span class="id" title="var">H</span>.<br/>
+<span class="id" title="tactic">rewrite</span> <span class="id" title="var">Z.add_opp_diag_l</span>.<br/>
+<span class="id" title="tactic">reflexivity</span>.<br/>
+<span class="id" title="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Lemma</span> <span class="id" title="var">a_plus_b_is_NOT_0</span> :<br/>
+<span class="id" title="keyword">forall</span> <span class="id" title="var">n</span> <span class="id" title="var">m</span>,<br/>
+<span class="id" title="var">n</span> &lt;&gt; (-<span class="id" title="var">m</span>) -&gt;<br/>
+<span class="id" title="var">n</span> &lt;&gt; 0 \/ <span class="id" title="var">m</span> &lt;&gt; 0 -&gt;<br/>
+(<span class="id" title="var">n</span> + <span class="id" title="var">m</span> =? 0) = <span class="id" title="var">false</span>%<span class="id" title="var">Z</span>.<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+<span class="id" title="tactic">intros</span>.<br/>
+<span class="id" title="tactic">induction</span> <span class="id" title="var">m</span>.<br/>
+- <span class="id" title="tactic">induction</span> <span class="id" title="var">n</span>.<br/>
+-- <span class="id" title="tactic">destruct</span> <span class="id" title="var">H0</span>; (<span class="id" title="tactic">unfold</span> "&lt;&gt;" <span class="id" title="tactic">in</span> <span class="id" title="var">H0</span>; <span class="id" title="tactic">destruct</span> <span class="id" title="var">H0</span>; <span class="id" title="tactic">reflexivity</span>).<br/>
+-- <span class="id" title="tactic">destruct</span> <span class="id" title="var">H0</span>.<br/>
+--- <span class="id" title="tactic">rewrite</span> <span class="id" title="var">Z.add_0_r</span>.<br/>
+<span class="id" title="tactic">rewrite</span> <span class="id" title="var">Z.eqb_neq</span>.<br/>
+<span class="id" title="tactic">apply</span> <span class="id" title="var">H0</span>.<br/>
+--- <span class="id" title="tactic">destruct</span> <span class="id" title="var">H0</span>. <span class="id" title="tactic">reflexivity</span>.<br/>
+-- <span class="id" title="tactic">destruct</span> <span class="id" title="var">H0</span>.<br/>
+--- <span class="id" title="tactic">rewrite</span> <span class="id" title="var">Z.add_0_r</span>.<br/>
+<span class="id" title="tactic">rewrite</span> <span class="id" title="var">Z.eqb_neq</span>.<br/>
+<span class="id" title="tactic">apply</span> <span class="id" title="var">H0</span>.<br/>
+--- <span class="id" title="tactic">destruct</span> <span class="id" title="var">H0</span>. <span class="id" title="tactic">reflexivity</span>.<br/>
+- <span class="id" title="tactic">induction</span> <span class="id" title="var">n</span>.<br/>
+-- <span class="id" title="tactic">rewrite</span> <span class="id" title="var">Z.add_0_l</span>.<br/>
+&nbsp;&nbsp;&nbsp;<span class="id" title="tactic">destruct</span> <span class="id" title="var">H0</span>.<br/>
+--- <span class="id" title="tactic">destruct</span> <span class="id" title="var">H0</span>. <span class="id" title="tactic">reflexivity</span>.<br/>
+--- <span class="id" title="tactic">rewrite</span> <span class="id" title="var">Z.eqb_neq</span>. <span class="id" title="tactic">apply</span> <span class="id" title="var">H0</span>.<br/>
+-- <span class="id" title="tactic">destruct</span> <span class="id" title="var">H0</span>.<br/>
+--- <span class="id" title="tactic">rewrite</span> <span class="id" title="var">Z.eqb_neq</span>.<br/>
+<span class="id" title="var">admit</span>.<br/>
+--- <span class="id" title="tactic">rewrite</span> <span class="id" title="var">Z.eqb_neq</span>.<br/>
+<span class="id" title="var">admit</span>.<br/>
+-- <span class="id" title="tactic">destruct</span> <span class="id" title="var">H0</span>.<br/>
+--- <span class="id" title="tactic">rewrite</span> <span class="id" title="var">Z.eqb_neq</span>.<br/>
+<span class="id" title="var">admit</span>.<br/>
+--- <span class="id" title="tactic">rewrite</span> <span class="id" title="var">Z.eqb_neq</span>.<br/>
+<span class="id" title="var">admit</span>.<br/>
+- <span class="id" title="tactic">induction</span> <span class="id" title="var">n</span>.<br/>
+-- <span class="id" title="tactic">rewrite</span> <span class="id" title="var">Z.add_0_l</span>. <span class="id" title="tactic">rewrite</span> <span class="id" title="var">Z.eqb_neq</span>. <span class="id" title="tactic">destruct</span> <span class="id" title="var">H0</span>.<br/>
+--- <span class="id" title="tactic">destruct</span> <span class="id" title="var">H0</span>. <span class="id" title="tactic">reflexivity</span>.<br/>
+--- <span class="id" title="tactic">apply</span> <span class="id" title="var">H0</span>.<br/>
+-- <span class="id" title="tactic">rewrite</span> <span class="id" title="var">Z.eqb_neq</span>. <span class="id" title="tactic">destruct</span> <span class="id" title="var">H0</span>.<br/>
+--- <span class="id" title="var">admit</span>.<br/>
+--- <span class="id" title="var">admit</span>.<br/>
+-- <span class="id" title="tactic">rewrite</span> <span class="id" title="var">Z.eqb_neq</span>. <span class="id" title="tactic">destruct</span> <span class="id" title="var">H0</span>.<br/>
+--- <span class="id" title="var">admit</span>.<br/>
+--- <span class="id" title="var">admit</span>.<br/>
+<span class="id" title="var">Admitted</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Lemma</span> <span class="id" title="var">a_le_n_implies_a_diff_n_plus_1</span> :<br/>
+<span class="id" title="keyword">forall</span> (<span class="id" title="var">a</span> <span class="id" title="var">n</span> : <span class="id" title="var">Z</span>),<br/>
+<span class="id" title="var">a</span> &lt;= <span class="id" title="var">n</span> -&gt; <span class="id" title="var">a</span> &lt;&gt; <span class="id" title="var">n</span>+1.<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+<span class="id" title="tactic">intros</span>.<br/>
+<span class="id" title="var">Admitted</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Open</span> <span class="id" title="keyword">Scope</span> <span class="id" title="var">positive_scope</span>.<br/>
+<span class="id" title="keyword">Lemma</span> <span class="id" title="var">neg_div_pos_stays_neg</span> :<br/>
+<span class="id" title="keyword">forall</span> (<span class="id" title="var">a</span> : <span class="id" title="var">positive</span>) <span class="id" title="var">b</span>, (<span class="id" title="var">b</span> &gt; 0)%<span class="id" title="var">Z</span> -&gt;<br/>
+((<span class="id" title="var">Z.neg</span> <span class="id" title="var">a</span> / <span class="id" title="var">b</span>) &lt;= 0)%<span class="id" title="var">Z</span>.<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+<span class="id" title="tactic">intros</span>.<br/>
+<span class="id" title="tactic">induction</span> <span class="id" title="var">a</span>.<br/>
++ <span class="id" title="tactic">rewrite</span> <span class="id" title="var">Pos.xI_succ_xO</span>. <span class="id" title="var">Admitted</span>.<br/>
+<span class="id" title="keyword">Close</span> <span class="id" title="keyword">Scope</span> <span class="id" title="var">positive_scope</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Open</span> <span class="id" title="keyword">Scope</span> <span class="id" title="var">positive_scope</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Close</span> <span class="id" title="keyword">Scope</span> <span class="id" title="var">positive_scope</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Close</span> <span class="id" title="keyword">Scope</span> <span class="id" title="var">Z</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+Proprietati generale utile 
+</div>
+<div class="code">
+
+<br/>
+<span class="id" title="keyword">Open</span> <span class="id" title="keyword">Scope</span> <span class="id" title="var">Z</span>.<br/>
+<span class="id" title="keyword">Lemma</span> <span class="id" title="var">lt1_equiv_le0</span>:<br/>
+<span class="id" title="keyword">forall</span> (<span class="id" title="var">x</span>:<span class="id" title="var">Z</span>), <span class="id" title="var">x</span> &lt;= 0%<span class="id" title="var">Z</span> -&gt; <span class="id" title="var">x</span> &lt; 1%<span class="id" title="var">Z</span>.<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+<span class="id" title="tactic">intros</span>.<br/>
+ <span class="id" title="tactic">assert</span> (1 = <span class="id" title="var">Z.succ</span> 0). <span class="id" title="tactic">simpl</span>. <span class="id" title="tactic">reflexivity</span>.<br/>
+<span class="id" title="tactic">rewrite</span> <span class="id" title="var">H0</span>. <span class="id" title="tactic">apply</span> <span class="id" title="var">Zle_lt_succ</span>. <span class="id" title="tactic">assumption</span>.<br/>
+<span class="id" title="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Lemma</span> <span class="id" title="var">positive_ge_10_implies_p_div_10_ge_1</span>:<br/>
+<span class="id" title="keyword">forall</span> <span class="id" title="var">p</span> : <span class="id" title="var">positive</span>, (<span class="id" title="var">Z.pos</span> <span class="id" title="var">p</span>) &gt;= 10 -&gt;  <span class="id" title="var">Z.pos</span> <span class="id" title="var">p</span> /10 &gt;= 1.<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+&nbsp;<span class="id" title="tactic">intros</span> <span class="id" title="var">p</span>.<br/>
+ <span class="id" title="tactic">apply</span> <span class="id" title="var">Zdiv.Z_div_ge</span>.<br/>
+&nbsp;<span class="id" title="tactic">reflexivity</span>.<br/>
+<span class="id" title="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Lemma</span> <span class="id" title="var">positive_lt_than_10_implies_p_div_10_lt_1</span>:<br/>
+<span class="id" title="keyword">forall</span> <span class="id" title="var">p</span> : <span class="id" title="var">positive</span>, <span class="id" title="var">Z.pos</span> <span class="id" title="var">p</span> &lt; 10 -&gt; <span class="id" title="var">Z.pos</span> <span class="id" title="var">p</span> / 10 &lt; 1.<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+<span class="id" title="tactic">intros</span> <span class="id" title="var">p</span>.<br/>
+<span class="id" title="tactic">intros</span>.<br/>
+<span class="id" title="tactic">rewrite</span> <span class="id" title="var">Zdiv.Zdiv_small</span>.<br/>
+- <span class="id" title="tactic">reflexivity</span>.<br/>
+- <span class="id" title="tactic">split</span>.<br/>
+--  <span class="id" title="tactic">apply</span> <span class="id" title="var">Pos2Z.is_nonneg</span>.<br/>
+-- <span class="id" title="tactic">assumption</span>.<br/>
+<span class="id" title="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Lemma</span> <span class="id" title="var">negative_lt_than_10_implies_n_div_10_is_0</span>:<br/>
+<span class="id" title="keyword">forall</span> <span class="id" title="var">p</span> : <span class="id" title="var">positive</span>, <span class="id" title="var">Z.neg</span> <span class="id" title="var">p</span> &lt; 10 -&gt; <span class="id" title="var">Z.neg</span> <span class="id" title="var">p</span> / 10 &lt;= 0.<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+<span class="id" title="tactic">intros</span> <span class="id" title="var">p</span>.<br/>
+<span class="id" title="tactic">intros</span>.<br/>
+<span class="id" title="tactic">rewrite</span> <span class="id" title="var">neg_div_pos_stays_neg</span>. <span class="id" title="tactic">reflexivity</span>. <span class="id" title="tactic">reflexivity</span>.<br/>
+<span class="id" title="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Close</span> <span class="id" title="keyword">Scope</span> <span class="id" title="var">Z</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+Proprietati ale functiilor de baza/ajutatoare 
+</div>
+<div class="code">
+<span class="id" title="keyword">Open</span> <span class="id" title="keyword">Scope</span> <span class="id" title="var">Z</span>.<br/>
+<span class="id" title="keyword">Lemma</span> <span class="id" title="var">load_8_from_adress_loads_1_byte</span> :<br/>
+<span class="id" title="keyword">forall</span><br/>
+(<span class="id" title="var">pointer</span> : <span class="id" title="var">Z</span>)<br/>
+(<span class="id" title="var">mem</span>: <span class="id" title="var">list</span> <span class="id" title="var">MemoryByte</span>)<br/>
+<span class="id" title="var">n</span>,<br/>
+<span class="id" title="var">n</span> = (<span class="id" title="var">load_8_from_adress</span> <span class="id" title="var">pointer</span> <span class="id" title="var">mem</span>) -&gt;<br/>
+<span class="id" title="var">n</span> &lt;= 255 /\ <span class="id" title="var">n</span> &gt;= 0.<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+<span class="id" title="var">Admitted</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Lemma</span> <span class="id" title="var">signed2unsigned_of_not_0_is_not_0</span> :<br/>
+<span class="id" title="keyword">forall</span> (<span class="id" title="var">n</span> <span class="id" title="var">m</span> : <span class="id" title="var">Z</span>),<br/>
+<span class="id" title="var">n</span> =? 0 = <span class="id" title="var">false</span> -&gt;<br/>
+(<span class="id" title="var">m</span> = 1 /\ (<span class="id" title="var">n</span> &lt;= 255                  /\ <span class="id" title="var">n</span> &gt;= -128) ) \/<br/>
+(<span class="id" title="var">m</span> = 2 /\ (<span class="id" title="var">n</span> &lt;= 65535                /\ <span class="id" title="var">n</span> &gt;= -32768) ) \/<br/>
+(<span class="id" title="var">m</span> = 4 /\ (<span class="id" title="var">n</span> &lt;= 4294967295           /\ <span class="id" title="var">n</span> &gt;= -2147483648) ) \/<br/>
+(<span class="id" title="var">m</span> = 8 /\ (<span class="id" title="var">n</span> &lt;= 18446744073709551615 /\ <span class="id" title="var">n</span> &gt;= -9223372036854775808) ) -&gt;<br/>
+(<span class="id" title="var">signed2unsigned</span> <span class="id" title="var">n</span> <span class="id" title="var">m</span> =? 0) = <span class="id" title="var">false</span>.<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+<span class="id" title="tactic">intros</span>.<br/>
+<span class="id" title="tactic">unfold</span> <span class="id" title="var">signed2unsigned</span>.<br/>
+<span class="id" title="tactic">induction</span> <span class="id" title="var">n</span>.<br/>
+- <span class="id" title="tactic">inversion</span> <span class="id" title="var">H</span>.<br/>
+- <span class="id" title="tactic">unfold</span> "&lt;?".<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">rewrite</span> <span class="id" title="var">Zgt_pos_0</span>. <span class="id" title="tactic">apply</span> <span class="id" title="var">H</span>.<br/>
+- <span class="id" title="tactic">unfold</span> "&lt;?".<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">rewrite</span> <span class="id" title="var">Zlt_neg_0</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">destruct</span> <span class="id" title="var">H0</span>.<br/>
++ <span class="id" title="tactic">destruct</span> <span class="id" title="var">H0</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">destruct</span> <span class="id" title="var">H1</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">rewrite</span> <span class="id" title="var">H0</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">rewrite</span> <span class="id" title="var">a_plus_b_is_NOT_0</span>.<br/>
+++ <span class="id" title="tactic">reflexivity</span>.<br/>
+++ <br/>
+<span class="id" title="tactic">apply</span> <span class="id" title="var">Znumtheory.Z_lt_neq</span>.<br/>
+<span class="id" title="tactic">apply</span> <span class="id" title="var">Z.ge_le</span> <span class="id" title="tactic">in</span> <span class="id" title="var">H2</span>.<br/>
+<span class="id" title="tactic">apply</span> <span class="id" title="var">Z.lt_le_trans</span> <span class="id" title="keyword">with</span> (-128).<br/>
++++ <span class="id" title="tactic">reflexivity</span>.<br/>
++++ <span class="id" title="tactic">apply</span> <span class="id" title="var">H2</span>.<br/>
+++ <span class="id" title="tactic">right</span>. <span class="id" title="tactic">discriminate</span>.<br/>
++ <span class="id" title="tactic">destruct</span> <span class="id" title="var">H0</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">destruct</span> <span class="id" title="var">H0</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">rewrite</span> <span class="id" title="var">H0</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">rewrite</span> <span class="id" title="var">a_plus_b_is_NOT_0</span>.<br/>
+++ <span class="id" title="tactic">reflexivity</span>.<br/>
+++ <span class="id" title="tactic">destruct</span> <span class="id" title="var">H1</span>.<br/>
+<span class="id" title="tactic">apply</span> <span class="id" title="var">Znumtheory.Z_lt_neq</span>.<br/>
+<span class="id" title="tactic">apply</span> <span class="id" title="var">Z.ge_le</span> <span class="id" title="tactic">in</span> <span class="id" title="var">H2</span>.<br/>
+<span class="id" title="tactic">apply</span> <span class="id" title="var">Z.lt_le_trans</span> <span class="id" title="keyword">with</span> (-32768).<br/>
++++ <span class="id" title="tactic">reflexivity</span>.<br/>
++++ <span class="id" title="tactic">apply</span> <span class="id" title="var">H2</span>.<br/>
+++ <span class="id" title="tactic">right</span>. <span class="id" title="tactic">discriminate</span>.<br/>
+++ <span class="id" title="tactic">destruct</span> <span class="id" title="var">H0</span>.<br/>
++++ <span class="id" title="tactic">destruct</span> <span class="id" title="var">H0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="tactic">rewrite</span> <span class="id" title="var">H0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="tactic">rewrite</span> <span class="id" title="var">a_plus_b_is_NOT_0</span>.<br/>
+++++ <span class="id" title="tactic">reflexivity</span>.<br/>
+++++ <span class="id" title="tactic">destruct</span> <span class="id" title="var">H1</span>.<br/>
+<span class="id" title="tactic">apply</span> <span class="id" title="var">Znumtheory.Z_lt_neq</span>.<br/>
+<span class="id" title="tactic">apply</span> <span class="id" title="var">Z.ge_le</span> <span class="id" title="tactic">in</span> <span class="id" title="var">H2</span>.<br/>
+<span class="id" title="tactic">apply</span> <span class="id" title="var">Z.lt_le_trans</span> <span class="id" title="keyword">with</span> (-2147483648).<br/>
++++++ <span class="id" title="tactic">reflexivity</span>.<br/>
++++++ <span class="id" title="tactic">apply</span> <span class="id" title="var">H2</span>.<br/>
+++++ <span class="id" title="tactic">right</span>. <span class="id" title="tactic">discriminate</span>.<br/>
++++ <span class="id" title="tactic">destruct</span> <span class="id" title="var">H0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="tactic">destruct</span> <span class="id" title="var">H1</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="tactic">rewrite</span> <span class="id" title="var">H0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="tactic">rewrite</span> <span class="id" title="var">a_plus_b_is_NOT_0</span>.<br/>
+++++ <span class="id" title="tactic">reflexivity</span>.<br/>
+++++<br/>
+<span class="id" title="tactic">apply</span> <span class="id" title="var">Znumtheory.Z_lt_neq</span>.<br/>
+<span class="id" title="tactic">apply</span> <span class="id" title="var">Z.ge_le</span> <span class="id" title="tactic">in</span> <span class="id" title="var">H2</span>.<br/>
+<span class="id" title="tactic">apply</span> <span class="id" title="var">Z.lt_le_trans</span> <span class="id" title="keyword">with</span> (-9223372036854775808).<br/>
++++++ <span class="id" title="tactic">reflexivity</span>.<br/>
++++++ <span class="id" title="tactic">apply</span> <span class="id" title="var">H2</span>.<br/>
+++++ <span class="id" title="tactic">right</span>. <span class="id" title="tactic">discriminate</span>.<br/>
+<span class="id" title="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Lemma</span> <span class="id" title="var">unsigned2signed_of_not_0_is_not_0</span> :<br/>
+<span class="id" title="keyword">forall</span> (<span class="id" title="var">n</span> <span class="id" title="var">m</span> : <span class="id" title="var">Z</span>),<br/>
+<span class="id" title="var">n</span> =? 0 = <span class="id" title="var">false</span> -&gt;<br/>
+(<span class="id" title="var">m</span> = 1 /\ (<span class="id" title="var">n</span> &lt;= 255                  /\ <span class="id" title="var">n</span> &gt;= -128) ) \/<br/>
+(<span class="id" title="var">m</span> = 2 /\ (<span class="id" title="var">n</span> &lt;= 65535                /\ <span class="id" title="var">n</span> &gt;= -32768) ) \/<br/>
+(<span class="id" title="var">m</span> = 4 /\ (<span class="id" title="var">n</span> &lt;= 4294967295           /\ <span class="id" title="var">n</span> &gt;= -2147483648) ) \/<br/>
+(<span class="id" title="var">m</span> = 8 /\ (<span class="id" title="var">n</span> &lt;= 18446744073709551615 /\ <span class="id" title="var">n</span> &gt;= -9223372036854775808) ) -&gt;<br/>
+(<span class="id" title="var">unsigned2signed</span> <span class="id" title="var">n</span> <span class="id" title="var">m</span> =? 0) = <span class="id" title="var">false</span>.<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+<span class="id" title="tactic">intros</span>.<br/>
+<span class="id" title="tactic">unfold</span> <span class="id" title="var">unsigned2signed</span>.<br/>
+<span class="id" title="tactic">destruct</span> <span class="id" title="var">H0</span>.<br/>
+- <span class="id" title="tactic">induction</span> <span class="id" title="var">n</span>.<br/>
++ <span class="id" title="tactic">inversion</span> <span class="id" title="var">H</span>.<br/>
++ <span class="id" title="tactic">unfold</span> "&gt;=?".<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">rewrite</span> <span class="id" title="var">Zgt_pos_0</span>.<br/>
+<span class="id" title="tactic">destruct</span> <span class="id" title="var">H0</span>.<br/>
+<span class="id" title="tactic">destruct</span> <span class="id" title="var">H1</span>.<br/>
+<span class="id" title="tactic">rewrite</span> <span class="id" title="var">H0</span>.<br/>
+<span class="id" title="tactic">unfold</span> <span class="id" title="var">signBitIsOne</span>.<br/>
+<span class="id" title="tactic">unfold</span> "&lt;?".<br/>
+<span class="id" title="tactic">rewrite</span> <span class="id" title="var">Zgt_pos_0</span>.<br/>
+<span class="id" title="var">case_eq</span> (<span class="id" title="var">Z.pos</span> <span class="id" title="var">p</span> &gt;? 127).<br/>
+++ <span class="id" title="tactic">intros</span>.<br/>
+<span class="id" title="tactic">unfold</span> "=?".<br/>
+<span class="id" title="tactic">apply</span> <span class="id" title="var">a_plus_b_is_NOT_0</span>.<br/>
++++ <span class="id" title="tactic">simpl</span>.<br/>
+<span class="id" title="var">Admitted</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Close</span> <span class="id" title="keyword">Scope</span> <span class="id" title="var">Z</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+Proprietati ale executiei instructiunilor 
+</div>
+<div class="code">
+<span class="id" title="keyword">Open</span> <span class="id" title="keyword">Scope</span> <span class="id" title="var">Z</span>.<br/>
+
+<br/>
+
+<br/>
+<span class="id" title="keyword">Lemma</span> <span class="id" title="var">eval_i32_ge_s_true</span> <br/>
+:<br/>
+<span class="id" title="keyword">forall</span> <span class="id" title="var">ex_st</span> <span class="id" title="var">var_st</span> <span class="id" title="var">glob_st</span> <span class="id" title="var">fun_st</span> <span class="id" title="var">mem</span> <span class="id" title="var">a</span> <span class="id" title="var">b</span>,<br/>
+(<span class="id" title="var">b</span> &gt;=? <span class="id" title="var">a</span> = <span class="id" title="var">true</span>) -&gt;<br/>
+<span class="id" title="var">execute_instruction</span> (<span class="id" title="var">i32_ge_s</span>) ((<span class="id" title="var">i32</span> <span class="id" title="var">a</span> :: <span class="id" title="var">i32</span> <span class="id" title="var">b</span> :: <span class="id" title="var">ex_st</span>), <span class="id" title="var">var_st</span>, <span class="id" title="var">glob_st</span>, <span class="id" title="var">fun_st</span>, <span class="id" title="var">mem</span>) = ( <span class="id" title="var">i32</span> 1:: <span class="id" title="var">ex_st</span>,<span class="id" title="var">var_st</span>, <span class="id" title="var">glob_st</span>, <span class="id" title="var">fun_st</span>, <span class="id" title="var">mem</span>).<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+<span class="id" title="tactic">intros</span> <span class="id" title="var">var_st</span> <span class="id" title="var">ex_St</span> <span class="id" title="var">glob_st</span> <span class="id" title="var">fun_st</span> <span class="id" title="var">mem</span> <span class="id" title="var">a</span> <span class="id" title="var">b</span>.<br/>
+<span class="id" title="tactic">intros</span> <span class="id" title="var">a_greater_than_b</span>.<br/>
+<span class="id" title="tactic">simpl</span>.<br/>
+<span class="id" title="tactic">unfold</span> <span class="id" title="var">execute_i32_ge_s</span>.<br/>
+<span class="id" title="tactic">simpl</span>.<br/>
+<span class="id" title="tactic">rewrite</span> <span class="id" title="var">a_greater_than_b</span>.<br/>
+<span class="id" title="tactic">reflexivity</span>.<br/>
+<span class="id" title="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Lemma</span> <span class="id" title="var">eval_i32_ge_s_true_old</span>:<br/>
+<span class="id" title="keyword">forall</span> <span class="id" title="var">var_st</span> <span class="id" title="var">ex_St</span> <span class="id" title="var">glob_st</span> <span class="id" title="var">fun_st</span> <span class="id" title="var">mem</span> <span class="id" title="var">a</span> <span class="id" title="var">b</span>,<br/>
+<span class="id" title="var">b</span> &gt;= <span class="id" title="var">a</span> -&gt;<br/>
+<span class="id" title="var">execute_instruction</span> (<span class="id" title="var">i32_ge_s</span>) ((<span class="id" title="var">i32</span> <span class="id" title="var">a</span> :: <span class="id" title="var">i32</span> <span class="id" title="var">b</span> :: <span class="id" title="var">ex_St</span>), <span class="id" title="var">var_st</span>, <span class="id" title="var">glob_st</span>, <span class="id" title="var">fun_st</span>, <span class="id" title="var">mem</span>) = ( <span class="id" title="var">i32</span> 1:: <span class="id" title="var">ex_St</span>,<span class="id" title="var">var_st</span>, <span class="id" title="var">glob_st</span>, <span class="id" title="var">fun_st</span>, <span class="id" title="var">mem</span>).<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+<span class="id" title="tactic">intros</span> <span class="id" title="var">var_st</span> <span class="id" title="var">ex_St</span> <span class="id" title="var">glob_st</span> <span class="id" title="var">fun_st</span> <span class="id" title="var">mem</span> <span class="id" title="var">a</span> <span class="id" title="var">b</span>.<br/>
+<span class="id" title="tactic">intros</span> <span class="id" title="var">a_greater_than_b</span>.<br/>
+<span class="id" title="tactic">simpl</span>.<br/>
+<span class="id" title="tactic">induction</span> <span class="id" title="var">b</span>.<br/>
+- <span class="id" title="tactic">induction</span> <span class="id" title="var">a</span>. <span class="id" title="tactic">auto</span>. <span class="id" title="var">contradiction</span>. <span class="id" title="tactic">auto</span>.<br/>
+- <span class="id" title="tactic">induction</span> <span class="id" title="var">a</span>. <span class="id" title="tactic">try</span> (<span class="id" title="tactic">auto</span>; <span class="id" title="tactic">unfold</span> <span class="id" title="var">execute_i32_ge_s</span>; <span class="id" title="tactic">unfold</span> <span class="id" title="var">execute_i32_ge_s'</span>; <span class="id" title="tactic">unfold</span> <span class="id" title="var">get_execution_stack</span>; <span class="id" title="tactic">simpl</span>;<br/>
+ <span class="id" title="tactic">assert</span> ((<span class="id" title="var">Z.pos</span> <span class="id" title="var">p</span> &gt;=? <span class="id" title="var">Z.pos</span> <span class="id" title="var">p0</span>) = <span class="id" title="var">true</span>);<br/>
+<span class="id" title="tactic">unfold</span> <span class="id" title="var">Z.geb</span>;<br/>
+<span class="id" title="var">case_eq</span> (<span class="id" title="var">Z.pos</span> <span class="id" title="var">p</span> ?= <span class="id" title="var">Zpos</span> <span class="id" title="var">p0</span>); <span class="id" title="tactic">intros</span> <span class="id" title="var">H0</span>; <span class="id" title="tactic">trivial</span>;<br/>
+<span class="id" title="tactic">apply</span> <span class="id" title="var">Zge_compare</span> <span class="id" title="tactic">in</span> <span class="id" title="var">a_greater_than_b</span>;<br/>
+<span class="id" title="tactic">rewrite</span> <span class="id" title="var">H0</span> <span class="id" title="tactic">in</span> <span class="id" title="var">a_greater_than_b</span>;<br/>
+<span class="id" title="var">exfalso</span>; <span class="id" title="tactic">assumption</span>;<br/>
+<span class="id" title="tactic">rewrite</span> <span class="id" title="var">H</span>; <span class="id" title="tactic">reflexivity</span>).<br/>
+-- <span class="id" title="tactic">try</span> (<span class="id" title="tactic">auto</span>; <span class="id" title="tactic">unfold</span> <span class="id" title="var">execute_i32_ge_s</span>; <span class="id" title="tactic">unfold</span> <span class="id" title="var">execute_i32_ge_s'</span>; <span class="id" title="tactic">unfold</span> <span class="id" title="var">get_execution_stack</span>; <span class="id" title="tactic">simpl</span>;<br/>
+<span class="id" title="tactic">assert</span> ((<span class="id" title="var">Z.pos</span> <span class="id" title="var">p</span> &gt;=? <span class="id" title="var">Z.pos</span> <span class="id" title="var">p0</span>) = <span class="id" title="var">true</span>);<br/>
+<span class="id" title="tactic">unfold</span> <span class="id" title="var">Z.geb</span>;<br/>
+<span class="id" title="var">case_eq</span> (<span class="id" title="var">Z.pos</span> <span class="id" title="var">p</span> ?= <span class="id" title="var">Zpos</span> <span class="id" title="var">p0</span>); <span class="id" title="tactic">intros</span> <span class="id" title="var">H0</span>; <span class="id" title="tactic">trivial</span>;<br/>
+<span class="id" title="tactic">apply</span> <span class="id" title="var">Zge_compare</span> <span class="id" title="tactic">in</span> <span class="id" title="var">a_greater_than_b</span>;<br/>
+<span class="id" title="tactic">rewrite</span> <span class="id" title="var">H0</span> <span class="id" title="tactic">in</span> <span class="id" title="var">a_greater_than_b</span>;<br/>
+<span class="id" title="var">exfalso</span>; <span class="id" title="tactic">assumption</span>;<br/>
+<span class="id" title="tactic">rewrite</span> <span class="id" title="var">H</span>; <span class="id" title="tactic">reflexivity</span>).<br/>
+-- <span class="id" title="tactic">try</span> (<span class="id" title="tactic">auto</span>; <span class="id" title="tactic">unfold</span> <span class="id" title="var">execute_i32_ge_s</span>; <span class="id" title="tactic">unfold</span> <span class="id" title="var">execute_i32_ge_s'</span>; <span class="id" title="tactic">unfold</span> <span class="id" title="var">get_execution_stack</span>; <span class="id" title="tactic">simpl</span>;<br/>
+<span class="id" title="tactic">assert</span> ((<span class="id" title="var">Z.pos</span> <span class="id" title="var">p</span> &gt;=? <span class="id" title="var">Z.pos</span> <span class="id" title="var">p0</span>) = <span class="id" title="var">true</span>);<br/>
+<span class="id" title="tactic">unfold</span> <span class="id" title="var">Z.geb</span>;<br/>
+<span class="id" title="var">case_eq</span> (<span class="id" title="var">Z.pos</span> <span class="id" title="var">p</span> ?= <span class="id" title="var">Zpos</span> <span class="id" title="var">p0</span>); <span class="id" title="tactic">intros</span> <span class="id" title="var">H0</span>; <span class="id" title="tactic">trivial</span>;<br/>
+<span class="id" title="tactic">apply</span> <span class="id" title="var">Zge_compare</span> <span class="id" title="tactic">in</span> <span class="id" title="var">a_greater_than_b</span>;<br/>
+<span class="id" title="tactic">rewrite</span> <span class="id" title="var">H0</span> <span class="id" title="tactic">in</span> <span class="id" title="var">a_greater_than_b</span>;<br/>
+<span class="id" title="var">exfalso</span>; <span class="id" title="tactic">assumption</span>;<br/>
+<span class="id" title="tactic">rewrite</span> <span class="id" title="var">H</span>; <span class="id" title="tactic">reflexivity</span>).<br/>
+- <span class="id" title="tactic">induction</span> <span class="id" title="var">a</span>. <span class="id" title="var">contradiction</span>.<br/>
+-- <span class="id" title="tactic">unfold</span> <span class="id" title="var">execute_i32_ge_s</span>. <span class="id" title="tactic">unfold</span> <span class="id" title="var">get_execution_stack</span>. <span class="id" title="tactic">simpl</span>. <span class="id" title="var">exfalso</span>. <span class="id" title="tactic">auto</span>.<br/>
+-- <span class="id" title="tactic">unfold</span> <span class="id" title="var">execute_i32_ge_s</span>. <span class="id" title="tactic">unfold</span> <span class="id" title="var">get_execution_stack</span>. <span class="id" title="tactic">simpl</span>.<br/>
+<span class="id" title="tactic">assert</span> ((<span class="id" title="var">Z.neg</span> <span class="id" title="var">p</span> &gt;=? <span class="id" title="var">Z.neg</span> <span class="id" title="var">p0</span>) = <span class="id" title="var">true</span>).<br/>
+<span class="id" title="tactic">unfold</span> <span class="id" title="var">Z.geb</span>.<br/>
+<span class="id" title="var">case_eq</span> (<span class="id" title="var">Z.neg</span> <span class="id" title="var">p</span> ?= <span class="id" title="var">Zneg</span> <span class="id" title="var">p0</span>); <span class="id" title="tactic">intros</span> <span class="id" title="var">H0</span>; <span class="id" title="tactic">trivial</span>.<br/>
+<span class="id" title="tactic">apply</span> <span class="id" title="var">Zge_compare</span> <span class="id" title="tactic">in</span> <span class="id" title="var">a_greater_than_b</span>. <span class="id" title="tactic">rewrite</span> <span class="id" title="var">H0</span> <span class="id" title="tactic">in</span> <span class="id" title="var">a_greater_than_b</span>. <span class="id" title="var">contradiction</span>.<br/>
+<span class="id" title="tactic">rewrite</span> <span class="id" title="var">H</span>. <span class="id" title="tactic">reflexivity</span>.<br/>
+<span class="id" title="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Lemma</span> <span class="id" title="var">eval_i32_ge_s_false</span>:<br/>
+<span class="id" title="keyword">forall</span> <span class="id" title="var">var_st</span> <span class="id" title="var">ex_St</span> <span class="id" title="var">glob_st</span> <span class="id" title="var">fun_st</span> <span class="id" title="var">mem</span> <span class="id" title="var">a</span> <span class="id" title="var">b</span>,<br/>
+<span class="id" title="var">b</span> &lt; <span class="id" title="var">a</span> -&gt;<br/>
+<span class="id" title="var">execute_instruction</span> (<span class="id" title="var">i32_ge_s</span>) ((<span class="id" title="var">i32</span> <span class="id" title="var">a</span> :: <span class="id" title="var">i32</span> <span class="id" title="var">b</span> :: <span class="id" title="var">ex_St</span>), <span class="id" title="var">var_st</span>, <span class="id" title="var">glob_st</span>, <span class="id" title="var">fun_st</span>, <span class="id" title="var">mem</span>) = ( <span class="id" title="var">i32</span> 0:: <span class="id" title="var">ex_St</span>,<span class="id" title="var">var_st</span>, <span class="id" title="var">glob_st</span>, <span class="id" title="var">fun_st</span>, <span class="id" title="var">mem</span>).<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+<span class="id" title="tactic">intros</span> <span class="id" title="var">var_st</span> <span class="id" title="var">ex_St</span> <span class="id" title="var">glob_st</span> <span class="id" title="var">fun_st</span> <span class="id" title="var">mem</span> <span class="id" title="var">a</span> <span class="id" title="var">b</span>.<br/>
+<span class="id" title="tactic">intros</span> <span class="id" title="var">a_less_than_b</span>.<br/>
+<span class="id" title="tactic">simpl</span>.<br/>
+<span class="id" title="tactic">induction</span> <span class="id" title="var">b</span>.<br/>
+- <span class="id" title="tactic">induction</span> <span class="id" title="var">a</span>.<br/>
+-- <span class="id" title="tactic">discriminate</span>.<br/>
+-- ( <span class="id" title="tactic">unfold</span> <span class="id" title="var">execute_i32_ge_s</span>; <span class="id" title="tactic">unfold</span> <span class="id" title="var">execute_i32_ge_s'</span>; <span class="id" title="tactic">unfold</span> <span class="id" title="var">get_execution_stack</span>; <span class="id" title="tactic">simpl</span>;<br/>
+<br/>
+<span class="id" title="tactic">reflexivity</span> ).<br/>
+-- <span class="id" title="tactic">discriminate</span>.<br/>
+- <span class="id" title="tactic">induction</span> <span class="id" title="var">a</span>.<br/>
+-- <span class="id" title="tactic">discriminate</span>.<br/>
+-- <span class="id" title="tactic">unfold</span> <span class="id" title="var">execute_i32_ge_s</span>. <span class="id" title="tactic">unfold</span> <span class="id" title="var">execute_i32_ge_s'</span>. <span class="id" title="tactic">unfold</span> <span class="id" title="var">get_execution_stack</span>. <span class="id" title="tactic">simpl</span>.<br/>
+<span class="id" title="tactic">assert</span> ((<span class="id" title="var">Z.pos</span> <span class="id" title="var">p</span> &gt;=? <span class="id" title="var">Z.pos</span> <span class="id" title="var">p0</span>) = <span class="id" title="var">false</span>) .<br/>
+<span class="id" title="tactic">unfold</span> "&lt;" <span class="id" title="tactic">in</span> <span class="id" title="var">a_less_than_b</span>. <span class="id" title="tactic">unfold</span> "&gt;=?".<br/>
+<span class="id" title="tactic">rewrite</span> <span class="id" title="var">a_less_than_b</span>.<br/>
+<span class="id" title="tactic">reflexivity</span>.<br/>
+<span class="id" title="tactic">rewrite</span> <span class="id" title="var">H</span>.<br/>
+<span class="id" title="tactic">reflexivity</span>.<br/>
+-- <span class="id" title="tactic">unfold</span> <span class="id" title="var">execute_i32_ge_s</span>. <span class="id" title="tactic">unfold</span> <span class="id" title="var">execute_i32_ge_s'</span>. <span class="id" title="tactic">unfold</span> <span class="id" title="var">get_execution_stack</span>.<br/>
+<span class="id" title="tactic">try</span> (<span class="id" title="tactic">assert</span> ((<span class="id" title="var">Z.pos</span> <span class="id" title="var">p</span> &gt;=? <span class="id" title="var">Z.neg</span> <span class="id" title="var">p0</span>) = <span class="id" title="var">false</span>);<span class="id" title="tactic">unfold</span> "&lt;" <span class="id" title="tactic">in</span> <span class="id" title="var">a_less_than_b</span>; <span class="id" title="tactic">unfold</span> "&gt;=?"; <span class="id" title="tactic">rewrite</span> <span class="id" title="var">a_less_than_b</span>; <span class="id" title="tactic">reflexivity</span>; <span class="id" title="tactic">rewrite</span> <span class="id" title="var">H</span>; <span class="id" title="tactic">reflexivity</span>).<br/>
+- <span class="id" title="tactic">induction</span> <span class="id" title="var">a</span>.<br/>
+-- <span class="id" title="tactic">unfold</span> <span class="id" title="var">execute_i32_ge_s</span>. <span class="id" title="tactic">unfold</span> <span class="id" title="var">execute_i32_ge_s'</span>. <span class="id" title="tactic">unfold</span> <span class="id" title="var">get_execution_stack</span>.<br/>
+<span class="id" title="tactic">try</span> (<span class="id" title="tactic">assert</span> ((<span class="id" title="var">Z.neg</span> <span class="id" title="var">p</span> &gt;=? 0) = <span class="id" title="var">false</span>);<span class="id" title="tactic">unfold</span> "&lt;" <span class="id" title="tactic">in</span> <span class="id" title="var">a_less_than_b</span>; <span class="id" title="tactic">unfold</span> "&gt;=?"; <span class="id" title="tactic">rewrite</span> <span class="id" title="var">a_less_than_b</span>; <span class="id" title="tactic">reflexivity</span>; <span class="id" title="tactic">rewrite</span> <span class="id" title="var">H</span>; <span class="id" title="tactic">reflexivity</span>).<br/>
+-- <span class="id" title="tactic">unfold</span> <span class="id" title="var">execute_i32_ge_s</span>. <span class="id" title="tactic">unfold</span> <span class="id" title="var">execute_i32_ge_s'</span>. <span class="id" title="tactic">unfold</span> <span class="id" title="var">get_execution_stack</span>.<br/>
+<span class="id" title="tactic">try</span> (<span class="id" title="tactic">assert</span> ((<span class="id" title="var">Z.neg</span> <span class="id" title="var">p</span> &gt;=? <span class="id" title="var">Z.pos</span> <span class="id" title="var">p0</span>) = <span class="id" title="var">false</span>);<span class="id" title="tactic">unfold</span> "&lt;" <span class="id" title="tactic">in</span> <span class="id" title="var">a_less_than_b</span>; <span class="id" title="tactic">unfold</span> "&gt;=?"; <span class="id" title="tactic">rewrite</span> <span class="id" title="var">a_less_than_b</span>; <span class="id" title="tactic">reflexivity</span>; <span class="id" title="tactic">rewrite</span> <span class="id" title="var">H</span>; <span class="id" title="tactic">reflexivity</span>).<br/>
+-- <span class="id" title="tactic">unfold</span> <span class="id" title="var">execute_i32_ge_s</span>. <span class="id" title="tactic">unfold</span> <span class="id" title="var">execute_i32_ge_s'</span>. <span class="id" title="tactic">unfold</span> <span class="id" title="var">get_execution_stack</span>. <span class="id" title="tactic">simpl</span>.<br/>
+<span class="id" title="tactic">try</span> (<span class="id" title="tactic">assert</span> ((<span class="id" title="var">Z.neg</span> <span class="id" title="var">p</span> &gt;=? <span class="id" title="var">Z.neg</span> <span class="id" title="var">p0</span>) = <span class="id" title="var">false</span>);<span class="id" title="tactic">unfold</span> "&lt;" <span class="id" title="tactic">in</span> <span class="id" title="var">a_less_than_b</span>; <span class="id" title="tactic">unfold</span> "&gt;=?"; <span class="id" title="tactic">rewrite</span> <span class="id" title="var">a_less_than_b</span>; <span class="id" title="tactic">reflexivity</span>; <span class="id" title="tactic">rewrite</span> <span class="id" title="var">H</span>; <span class="id" title="tactic">reflexivity</span>).<br/>
+<span class="id" title="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Open</span> <span class="id" title="keyword">Scope</span> <span class="id" title="var">com_scope</span>.<br/>
+
+<br/>
+
+<br/>
+<span class="id" title="keyword">Lemma</span> <span class="id" title="var">plus_comm</span> :<br/>
+<span class="id" title="keyword">forall</span> (<span class="id" title="var">a</span> <span class="id" title="var">b</span>: <span class="id" title="var">Z</span>)<br/>
+(<span class="id" title="var">ex_st</span> : <span class="id" title="var">list</span> <span class="id" title="var">WasmType</span>)<br/>
+(<span class="id" title="var">var_st</span> <span class="id" title="var">glob_st</span> : <span class="id" title="var">VariableList</span>)<br/>
+(<span class="id" title="var">fun_st</span> : <span class="id" title="var">FunctionList</span>)<br/>
+(<span class="id" title="var">mem</span> : <span class="id" title="var">Memory</span>),<br/>
+<span class="id" title="var">execute_instruction</span> (<span class="id" title="var">i32_add</span>) (( (<span class="id" title="var">i32</span> <span class="id" title="var">a</span>)::(<span class="id" title="var">i32</span> <span class="id" title="var">b</span>)::<span class="id" title="var">ex_st</span>), <span class="id" title="var">var_st</span> ,<span class="id" title="var">glob_st</span> ,<span class="id" title="var">fun_st</span>, <span class="id" title="var">mem</span>) =<br/>
+<span class="id" title="var">execute_instruction</span> (<span class="id" title="var">i32_add</span>) (( (<span class="id" title="var">i32</span> <span class="id" title="var">b</span>)::(<span class="id" title="var">i32</span> <span class="id" title="var">a</span>)::<span class="id" title="var">ex_st</span>), <span class="id" title="var">var_st</span> ,<span class="id" title="var">glob_st</span> ,<span class="id" title="var">fun_st</span>, <span class="id" title="var">mem</span>).<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+<span class="id" title="tactic">intros</span>.<br/>
+<span class="id" title="tactic">simpl</span>.<br/>
+<span class="id" title="tactic">unfold</span> <span class="id" title="var">execute_i32_add</span>.<br/>
+<span class="id" title="tactic">simpl</span>.<br/>
+<span class="id" title="tactic">rewrite</span> <span class="id" title="var">Z.add_comm</span>.<br/>
+<span class="id" title="tactic">reflexivity</span>.<br/>
+<span class="id" title="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Lemma</span> <span class="id" title="var">xor_n_n</span> :<br/>
+<span class="id" title="keyword">forall</span> (<span class="id" title="var">n</span> : <span class="id" title="var">Z</span>)<br/>
+(<span class="id" title="var">ex_st</span> : <span class="id" title="var">list</span> <span class="id" title="var">WasmType</span>)<br/>
+(<span class="id" title="var">var_st</span> <span class="id" title="var">glob_st</span> : <span class="id" title="var">VariableList</span>)<br/>
+(<span class="id" title="var">fun_st</span> : <span class="id" title="var">FunctionList</span>)<br/>
+(<span class="id" title="var">mem</span> : <span class="id" title="var">Memory</span>),<br/>
+(( (<span class="id" title="var">i32</span> <span class="id" title="var">n</span>)::(<span class="id" title="var">i32</span> <span class="id" title="var">n</span>)::<span class="id" title="var">ex_st</span>), <span class="id" title="var">var_st</span> ,<span class="id" title="var">glob_st</span> ,<span class="id" title="var">fun_st</span>, <span class="id" title="var">mem</span>)=[<br/>
+<span class="id" title="var">i32.xor</span><br/>
+]=&gt; ( (<span class="id" title="var">i32</span> (0)::<span class="id" title="var">ex_st</span>), <span class="id" title="var">var_st</span> ,<span class="id" title="var">glob_st</span> ,<span class="id" title="var">fun_st</span>, <span class="id" title="var">mem</span>) / <span class="id" title="var">SContinue</span>.<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+<span class="id" title="tactic">intros</span>.<br/>
+<span class="id" title="tactic">apply</span> <span class="id" title="var">E_i32_xor</span>.<br/>
+- <span class="id" title="tactic">reflexivity</span>.<br/>
+- <span class="id" title="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">unfold</span> <span class="id" title="var">execute_i32_xor</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">rewrite</span> <span class="id" title="var">Z.lxor_nilpotent</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">reflexivity</span>.<br/>
+<span class="id" title="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Lemma</span> <span class="id" title="var">read_any_location</span> :<br/>
+<span class="id" title="keyword">forall</span> <span class="id" title="var">pointer</span> <span class="id" title="var">information</span><br/>
+(<span class="id" title="var">loc_list</span> <span class="id" title="var">glob_list</span> : <span class="id" title="var">VariableList</span>)<br/>
+(<span class="id" title="var">func_list</span> : <span class="id" title="var">FunctionList</span>)<br/>
+(<span class="id" title="var">memsize</span> : <span class="id" title="var">Z</span>)<br/>
+(<span class="id" title="var">mem</span>: <span class="id" title="var">list</span> <span class="id" title="var">MemoryByte</span>),<br/>
+<br/>
+<span class="id" title="var">information</span> = <span class="id" title="var">load_8_from_adress</span> <span class="id" title="var">pointer</span> (<span class="id" title="var">mem</span>) -&gt;<br/>
+<span class="id" title="var">pointer</span> &lt; <span class="id" title="var">memsize</span> -&gt;<br/>
+0 &lt;= <span class="id" title="var">pointer</span> &lt; 4294967296 -&gt;<br/>
+<br/>
+([<span class="id" title="var">i32</span> <span class="id" title="var">pointer</span>], <span class="id" title="var">loc_list</span>, <span class="id" title="var">glob_list</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">func_list</span>, ( <span class="id" title="var">memsize</span>, <span class="id" title="var">mem</span>)) =[<br/>
+<span class="id" title="var">i32.load8_u</span><br/>
+]=&gt;([<span class="id" title="var">i32</span> <span class="id" title="var">information</span>], <span class="id" title="var">loc_list</span>, <span class="id" title="var">glob_list</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">func_list</span>, ( <span class="id" title="var">memsize</span>, <span class="id" title="var">mem</span>)) / <span class="id" title="var">SContinue</span> .<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+
+<br/>
+<span class="id" title="tactic">intros</span> <span class="id" title="var">pointer</span> <span class="id" title="var">information</span>.<br/>
+<span class="id" title="tactic">intros</span> <span class="id" title="var">loc_list</span> <span class="id" title="var">glob_list</span>.<br/>
+<span class="id" title="tactic">intros</span> <span class="id" title="var">func_list</span>.<br/>
+<span class="id" title="tactic">intros</span> <span class="id" title="var">memsize</span>.<br/>
+<span class="id" title="tactic">intros</span> <span class="id" title="var">mem</span>.<br/>
+<span class="id" title="tactic">intros</span> <span class="id" title="var">any_info</span>.<br/>
+<span class="id" title="tactic">intros</span> <span class="id" title="var">pointer_max_memory</span>.<br/>
+<span class="id" title="tactic">intros</span> <span class="id" title="var">pointer_overflow</span>.<br/>
+
+<br/>
+<span class="id" title="tactic">apply</span> <span class="id" title="var">E_i32_Load8_u</span>.<br/>
+- <span class="id" title="tactic">unfold</span> <span class="id" title="var">execute_instruction</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">unfold</span> <span class="id" title="var">execute_i32_load8_u</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">simpl</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">unfold</span> "&lt;?". <span class="id" title="tactic">rewrite</span> <span class="id" title="var">pointer_max_memory</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">rewrite</span> <span class="id" title="var">any_info</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">unfold</span> <span class="id" title="var">signed2unsigned</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">reflexivity</span>.<br/>
+- <span class="id" title="tactic">reflexivity</span>.<br/>
+<span class="id" title="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Close</span> <span class="id" title="keyword">Scope</span> <span class="id" title="var">com_scope</span>.<br/>
+<span class="id" title="keyword">Close</span> <span class="id" title="keyword">Scope</span> <span class="id" title="var">Z</span>.<br/>
+</div>
+</div>
+
+<div id="footer">
+<hr/><a href="index.html">Index</a><hr/>This page has been generated by <a href="http://coq.inria.fr/">coqdoc</a>
+</div>
+
+</div>
+
+</body>
+</html>
