@@ -1,1 +1,1 @@
-file:///C:/Coq/bin/_wasmout2/index.html#library_I
+index.html#library_I
